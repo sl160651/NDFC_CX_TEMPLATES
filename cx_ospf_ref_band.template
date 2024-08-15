@@ -1,0 +1,38 @@
+##template properties
+name =cx_ospf_ref_band;
+description = set ospf reference bandwidth;
+tags = ;
+userDefined = true;
+supportedPlatforms = N9K;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2018 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(DisplayName="OSPF Process Tag", Description="OSPF routing process tag")
+string OSPF_TAG {
+  minLength = 1;
+  maxLength = 20;
+};
+
+@(DisplayName="Reference Bandwith", Description="OSPF reference bandwith, default 1600")
+enum BAND {
+  validValues = 1,10,100,200,400,800,1600,3200,6400;
+  defaultValue = 1600;
+};
+
+##
+##template content
+
+router ospf $$OSPF_TAG$$
+  auto-cost reference-bandwidth $$BAND$$ Gbps
+
+##

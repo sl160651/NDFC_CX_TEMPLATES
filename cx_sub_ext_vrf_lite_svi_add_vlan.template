@@ -1,0 +1,41 @@
+##template properties
+name =cx_sub_ext_vrf_lite_svi_add_vlan;
+description = "sub template cx_sub_ext_vrf_lite_svi_add_vlan. Not intended for direct use";
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+@(IsInternal=true)
+string SERIAL_NUMBER;
+
+@(IsInternal=true)
+string POLICY_ID;
+
+@(IsInternal=true)
+string VPC_ID_1;
+
+@(IsInternal=true)
+string VPC_ID_2;
+
+@(IsInternal=true)
+string VLAN_ID;
+
+##
+##template content
+
+interface port-channel $$VPC_ID_1$$
+  switchport trunk allowed vlan add $$VLAN_ID$$
+
+interface port-channel $$VPC_ID_2$$
+  switchport trunk allowed vlan add $$VLAN_ID$$
+
+##

@@ -1,0 +1,33 @@
+##template properties
+name =cx_ngoam_loop_detection_timers;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = N9K;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2023 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(DisplayName="Periodic probe interval", Description="Periodic probe interval")
+integer PERIODIC_PROBE_INTERVAL;
+
+@(DisplayName="Port recovery interval", Description="Port recovery interval")
+integer PORT_RECOVERY_INTERVAL;
+
+##
+##template content
+
+ngoam loop-detection
+  periodic-probe-interval $$PERIODIC_PROBE_INTERVAL$$
+  port-recovery-interval $$PORT_RECOVERY_INTERVAL$$
+
+##

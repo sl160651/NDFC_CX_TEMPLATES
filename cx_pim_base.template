@@ -1,0 +1,23 @@
+##template properties
+name =cx_pim_base;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+##
+##template content
+
+ip pim flush-routes
+ip pim pre-build-spt
+ip pim log-neighbor-changes
+
+##

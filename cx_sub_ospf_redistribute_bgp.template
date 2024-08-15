@@ -1,0 +1,25 @@
+##template properties
+name =cx_sub_ospf_redistribute_bgp;
+description = sub template of cx_ospf_redistribute_bgp;
+tags =internal;
+userDefined = true;
+supportedPlatforms = N9K;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+@(IsInternal=true, Description="BGP Autonomous System number")
+string SUB_BGP_AS;
+
+##
+##template content
+router ospf UNDERLAY
+  redistribute bgp $$SUB_BGP_AS$$ route-map rdist_bgp_ospf
+
+route-map rdist_bgp_ospf permit 10
+##

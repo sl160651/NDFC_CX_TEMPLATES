@@ -1,0 +1,31 @@
+##template properties
+name =cx_pim_static_rp_route_map;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = N9K;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2018 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(DisplayName="Static RP Address", Description="Static RP address for PIM multicast")
+ipV4Address RP_IP;
+
+@(DisplayName="Route Map Name", Description="Multicast Route Map")
+string ROUTE_MAP;
+
+##
+##template content
+
+ip pim rp-address $$RP_IP$$ route-map $$ROUTE_MAP$$
+
+##

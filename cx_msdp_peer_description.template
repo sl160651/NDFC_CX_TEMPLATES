@@ -1,0 +1,30 @@
+##template properties
+name =cx_msdp_peer_description;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = N9K;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2020 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(DisplayName="PEER IP Address", Description="IP address of the MSDP Peer")
+ipV4Address PEER_IP;
+
+@(DisplayName="Description", Description="MSDP Peer Description")
+string PEER_DESC;
+
+
+##
+##template content
+ip msdp peer description $$PEER_IP$$ $$PEER_DESC$$
+##

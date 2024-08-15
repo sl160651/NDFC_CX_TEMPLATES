@@ -1,0 +1,31 @@
+##template properties
+name =cx_multicast_multipath;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = N9K;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2018 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(DisplayName="Multipath Optional", Description="Multicast Multipath Option Selection")
+enum OPTION {
+    validValues=none,legacy,nbm,resilient,s-g-hash;
+    defaultValue=none;
+}; 
+
+##
+##template content
+
+ip multicast multipath $$OPTION$$
+
+##

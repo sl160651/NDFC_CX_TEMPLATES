@@ -1,0 +1,150 @@
+##template properties
+name =cx_static_add_bgp;
+description = Create a static Null Route for a prefix and advertise that over BGP using network statement;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = PYTHON;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2021 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(IsInternal=true)
+string SERIAL_NUMBER;
+
+@(IsInternal=true)
+string SOURCE;
+
+@(IsInternal=true)
+string POLICY_ID;
+
+@(DisplayName="IPv4 Prefix", Description="For Prefix Advertisement into BGP")
+ipV4AddressWithSubnet IP_MASK;
+
+@(IsMandatory=false, DisplayName="Local ASN", Description="The fabric ASN will be used if not specified")
+string ASN;
+
+@(IsMandatory=false, DisplayName="route-map", Description="Route-map name if required")
+string ROUTE_MAP;
+
+##
+##template content
+
+from com.cisco.dcbu.vinci.rest.services.jython import PTIWrapper
+from com.cisco.dcbu.vinci.rest.services.jython import Wrapper
+from com.cisco.dcbu.vinci.rest.services.jython import WrappersResp
+from com.cisco.dcbu.vinci.rest.services.jython import Helper
+from com.cisco.dcbu.vinci.rest.services.jython import InventoryWrapper
+from com.cisco.dcbu.vinci.rest.services.jython import InterfaceManagerWrapper
+from utility import *
+
+def add():
+    try:
+        
+        #if called by topdown, SOURCE will be set. Then user will not be able to edit from View/Edit policies
+        jython_source  = ""
+        try:
+            jython_source = SOURCE
+        except:
+            jython_source = POLICY_ID
+            pass
+        
+        SOURCE = jython_source
+
+        Wrapper.print("Source of adv_static_prefix_bgp is [%s] for switch [%s]." %(SOURCE, SERIAL_NUMBER))
+        
+        # get fabric for switch with this serial number
+        inventoryResp = InventoryWrapper.getFabricNameForSwitch(SERIAL_NUMBER)
+        if inventoryResp.isRetCodeSuccess():
+            fabricName = inventoryResp.getValue()
+            Wrapper.print("Inventory wrapper response fabric name is %s" %(fabricName))
+        else:
+            Wrapper.print("Invalid fabric for switch %s" %(SERIAL_NUMBER))
+            return inventoryResp
+             
+        ipAddress = IP_MASK.split("/")
+        IP = ipAddress[0]
+        PREFIX = ipAddress[1]
+        
+        # try to honor the ASN passed in
+        fabricAsn = ""
+        try:
+            fabricAsn = asn
+        except:
+            pass
+
+        if ((fabricAsn == None) or (fabricAsn == "")):
+            # the ASN does not seem valid... use the current fabric ASN
+            helperResp = Helper.getFabricAsn(fabricName)
+            if helperResp.isRetCodeSuccess():
+                fabricAsn = helperResp.getValue()
+            else:
+                Wrapper.print("Invalid ASN for Fabric %s" %(fabricName))
+                return helperResp
+            
+        if ((fabricAsn == None) or (fabricAsn == "")):
+            # we still have an invalid ASN
+            errorMsg = ("Could not determine the BGP ASN for fabric [%s]" % (fabricName))
+            respObj = WrappersResp.getRespObj()
+            respObj.addErrorReport("ADV-STATIC-PREFIX-BGP:INVALID_ASN", errorMsg)
+            respObj.setFailureRetCode()
+            return respObj
+
+        # modify to be done, calling delete now to clean up PTIs before add
+        Wrapper.print("Calling delete of PTIs for SOURCE %s" %(SOURCE))
+        delete(True)
+
+        #Create nv pairs BGP network statement PTI
+        #Convert to network prefix to avoid CC issues in show run
+        (IP, MASK_LEN) = IP_MASK.split('/')
+        subnet = Util.getSubnetStringWithPrefix(IP, MASK_LEN)
+
+
+        nvPairs = {"BGP_ASN": fabricAsn, "IP_PRE": IP_MASK, "ROUTE_MAP": ROUTE_MAP}
+        Wrapper.print("Creating bgp_network nvPairs %s" % (nvPairs))
+        Util.exe(PTIWrapper.createOrUpdate(SERIAL_NUMBER, "SWITCH", "SWITCH", SOURCE,
+                                   450,
+                                   "cx_bgp_network_statment", nvPairs))
+
+        respObj = WrappersResp.getRespObj()
+        respObj.setSuccessRetCode()
+        return respObj
+    except respObjError as e:
+        return e.value
+
+def delete(Force=False):
+    try:
+        jython_source  = ""
+        try:
+            jython_source = SOURCE
+        except:
+            jython_source = POLICY_ID
+            pass
+        
+        SOURCE = jython_source
+        Wrapper.print("Source of adv_static_prefix_bgp is %s for switch %s" %(SOURCE, SERIAL_NUMBER))
+        
+        #Get all PTIs for the SOURCE
+        wrappersResp = PTIWrapper.get(SERIAL_NUMBER, SOURCE)
+        if wrappersResp.isRetCodeSuccess():
+            policies = wrappersResp.getValue()
+            for policy in policies:
+                Wrapper.print("Adv static prefix bgp DELETE: %s %s" % (policy.getPolicyId(), policy.getTemplateName()))
+                PTIWrapper.markDeleteInstance(policy.getPolicyId())
+
+        respObj = WrappersResp.getRespObj()
+        respObj.setSuccessRetCode()
+        return respObj
+    except respObjError as e:
+        return e.value
+
+##
+

@@ -1,0 +1,383 @@
+##template properties
+name =cx_ext_vrf_lite_svi;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = PYTHON;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2020 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(IsInternal=true)
+string SERIAL_NUMBER;
+
+@(IsInternal=true)
+string SOURCE;
+
+@(IsInternal=true)
+string POLICY_ID;
+
+@(IsInternal=true)
+string PRIORITY;
+
+
+@(DisplayName="VLAN ID", Description="2-4094, value needs to be in switch allowed range")
+integer DOT1Q_ID {
+  min = 2;
+  max = 4094;
+};
+
+@(IsMandatory="false", DisplayName="VRF Name", Description="SVI VRF name, default VRF if not specified")
+string VRF_NAME {
+  minLength = 1;
+  maxLength = 32;
+};
+
+@(DisplayName="SVI IPv4 Address/Netmask", Description="For IPv4 VRF Lite peering")
+ipV4AddressWithSubnet IP_MASK;
+
+@(DisplayName="SVI MTU", IsMTU=true, Description="Layer-3 MTU (Min:576, Max:9216)")
+integer MTU {
+min = 576;
+max = 9216;
+defaultValue=9216;
+};
+
+@(DisplayName="Neighbor IPv4 Address", Description="BGP Peer IPv4 Address")
+ipV4Address NEIGHBOR_IP;
+
+@(DisplayName="Neighbor ASN", Description="BGP ASN of IPv4/IPv6 Neighbor")
+string NEIGHBOR_ASN;
+
+@(IsMandatory=false, DisplayName="Local ASN", Description="The fabric ASN will be used if not specified")
+string asn;
+
+@(IsMandatory=false, DisplayName="BGP Neighbor<br/>Password", Description="Hex String")
+string bgpPassword {
+minLength = 1;
+maxLength = 130;
+regularExpr=^[a-fA-F0-9]+$;
+};
+
+@(IsMandatory=false, IsShow="bgpPassword!=null", DisplayName="BGP Password<br/>Key Encryption Type", Description="BGP Key Encryption Type: 3 - 3DES, 7 - Cisco")
+enum bgpPasswordKeyType {
+    validValues=3,7;
+    defaultValue=3;
+};
+
+@(IsMandatory=false, DisplayName="Routing TAG", Description="Routing tag associated with interface IP", Section = "Advanced")
+string ROUTING_TAG;
+
+@(IsMandatory=false, DisplayName="Disable IP redirects", Description="Disables both IPv4/IPv6 redirects on the interface", Section = "Advanced")
+boolean DISABLE_IP_REDIRECTS {
+  defaultValue=true;  
+};
+
+@(IsMandatory=false, DisplayName="Interface Description", Description="Add description to the interface (Max Size 254)", Section = "Advanced")
+string DESC {
+  minLength = 1;
+  maxLength = 254;
+};
+
+@(IsMandatory=false, IsMultiLineString=true, DisplayName="Freeform Config", Description="Additional CLI for the interface", Section = "Advanced")
+string CONF;
+
+@(DisplayName="Interface Admin State", Description="Admin state of the interface", Section = "Advanced")
+boolean ADMIN_STATE {
+  defaultValue=true;
+};
+
+@(IsMandatory=false, DisplayName="VLAN HSRP Group", Description="Group Number. Default VLAN ID", Section = "HSRP")
+integer HSRP_GROUP;
+
+@(IsMandatory=false, DisplayName="HSRP Group IP", Description="HSRP IP address of the VLAN interface", Section = "HSRP")
+ipV4Address HSRP_IP;
+
+@(IsMandatory=false, DisplayName="HSRP Group Priority", Description="Priority to determine which switch act as active router. Default 100", Section = "HSRP")
+integer HSRP_PRIORITY {
+    min = 0;
+    max = 255;
+};
+
+@(IsMandatory=false, DisplayName="Virtual Port Channel ID#1", Description="vPC ID#1", Section = "vPC")
+integer VPC_ID_1{
+    min = 1;
+    max = 4096;
+};
+
+@(IsMandatory=false, DisplayName="Virtual Port Channel ID#2", Description="vPC ID#2", Section = "vPC")
+integer VPC_ID_2{
+    min = 1;
+    max = 4096;
+};
+
+##
+##template content
+
+from com.cisco.dcbu.vinci.rest.services.jython import PTIWrapper
+from com.cisco.dcbu.vinci.rest.services.jython import Wrapper
+from com.cisco.dcbu.vinci.rest.services.jython import WrappersResp
+from com.cisco.dcbu.vinci.rest.services.jython import Helper
+from com.cisco.dcbu.vinci.rest.services.jython import InventoryWrapper
+from com.cisco.dcbu.vinci.rest.services.jython import InterfaceManagerWrapper
+from utility import *
+
+templateName = "cx_ext_vrf_lite_svi"
+addVLANSubTemplateName = "cx_sub_ext_vrf_lite_svi_add_vlan"
+
+def add():
+    try:
+        #if called by topdown, SOURCE will be set. Then user will not be able to edit from View/Edit policies
+        jython_source  = ""
+        try:
+            jython_source = SOURCE
+        except:
+            jython_source = POLICY_ID
+            pass
+        
+        SOURCE = jython_source
+        eBGPPassword = ""
+        eBGPPasswordKeyType = "3"
+        try:
+            eBGPPassword = bgpPassword
+        except:
+            pass
+        try:
+            eBGPPasswordKeyType = bgpPasswordKeyType
+        except:
+            pass
+
+        Wrapper.print("Source of VRF Lite Jython is [%s] for switch [%s]. BGP Password [%s]/[%s]" %(SOURCE, SERIAL_NUMBER, 
+                                            eBGPPassword, eBGPPasswordKeyType))
+
+        src_intf = "Vlan" + str(DOT1Q_ID)
+        Wrapper.print("Interface provided %s" % (src_intf))
+        
+        srchOpt = CtrlPolicySearch()
+        srchOpt.setSerialNumber(SERIAL_NUMBER)
+        srchOpt.setSource(SOURCE)
+        srchOpt.setTemplateName( "int_vlan_internal")
+        ptiList = Util.exe(PTIWrapper.getPTIs(srchOpt))
+        if ptiList:
+            for pti in ptiList:
+                oldInterface = pti.getEntityName()
+                #Compare the interface, it should be the same
+                if oldInterface != src_intf:
+                    Wrapper.print("Error case: Old: %s New %s" %(oldInterface, src_intf))
+                    errorMsg = ("New parent interface %s not matching old one %s" % (oldInterface, src_intf))
+                    respObj = WrappersResp.getRespObj()
+                    respObj.addErrorReport(("Error"), errorMsg)
+                    respObj.setFailureRetCode()
+                    return respObj
+
+                break
+            
+        #Validate neighbor ASN format
+        respObj = Helper.isValidAsn (NEIGHBOR_ASN)
+        if respObj.isRetCodeFailure():
+            errorMsg = ("Invalid Neighbor ASN %s" % (NEIGHBOR_ASN))
+            respObj.addErrorReport(("Error"), errorMsg)
+            return respObj
+        
+        # get fabric for switch with this serial number
+        inventoryResp = InventoryWrapper.getFabricNameForSwitch(SERIAL_NUMBER)
+        if inventoryResp.isRetCodeSuccess():
+            fabricName = inventoryResp.getValue()
+            Wrapper.print("Inventory wrapper response fabric name is %s" %(fabricName))
+        else:
+            Wrapper.print("Invalid fabric for switch %s" %(SERIAL_NUMBER))
+            return inventoryResp
+                                           
+        # try to honor the ASN passed in
+        fabricAsn = ""
+        try:
+            fabricAsn = asn
+        except:
+            pass
+
+        if ((fabricAsn == None) or (fabricAsn == "")):
+            # the ASN does not seem valid... use the current fabric ASN
+            helperResp = Helper.getFabricAsn(fabricName)
+            if helperResp.isRetCodeSuccess():
+                fabricAsn = helperResp.getValue()
+            else:
+                Wrapper.print("Invalid ASN for Fabric %s" %(fabricName))
+                return helperResp
+            
+        if ((fabricAsn == None) or (fabricAsn == "")):
+            # we still have an invalid ASN
+            errorMsg = ("Could not determine the BGP ASN for fabric [%s]" % (fabricName))
+            respObj = WrappersResp.getRespObj()
+            respObj.addErrorReport("VRF-LITE-AUTO_EXT:INVALID_ASN", errorMsg)
+            respObj.setFailureRetCode()
+            return respObj
+        
+        ###hsrp Group
+        HSRP_GROUP_INTERNAL = ""
+        try:
+            HSRP_GROUP_INTERNAL = HSRP_GROUP
+        except:
+            pass
+        
+        if (HSRP_GROUP_INTERNAL == None) or (HSRP_GROUP_INTERNAL == ""):
+            try:
+                HSRP_GROUP_INTERNAL = DOT1Q_ID
+            except:
+                Wrapper.print("Invalid HSRP Group ID")
+                return helperResp
+
+            
+        # modify to be done, calling delete now to clean up PTIs before add
+        Wrapper.print("Calling delete of PTIs for SOURCE %s" %(SOURCE))
+        delete(True)
+
+        #SVI Interface
+        intfName = "Vlan" + str(DOT1Q_ID)
+        
+        # For default vrf in external fabric, should RM be done?
+        rmIds = []
+
+        ipAddress = IP_MASK.split("/")
+        IP = ipAddress[0]
+        PREFIX = ipAddress[1]
+        
+        intfVrf = "default" if VRF_NAME == "" or VRF_NAME.lower() == "default" else VRF_NAME
+    
+        # Create SVI for VRF Lite Extension
+        new_nvPairs = {"INTF_NAME" : intfName,
+                       "VLAN" : DOT1Q_ID,
+                       "IP" : IP,
+                       "PREFIX" : PREFIX,
+                       "INTF_VRF" : intfVrf,
+                       "MTU" : MTU,
+                       "ROUTING_TAG": ROUTING_TAG,
+                       "DISABLE_IP_REDIRECTS": DISABLE_IP_REDIRECTS,
+                       "ADMIN_STATE" : ADMIN_STATE,
+                       "DESC" : DESC,
+                       "CONF" : CONF
+                      }
+        Wrapper.print("adding SVI %s, nvPairs %s" % (new_nvPairs["INTF_NAME"], new_nvPairs))
+
+        Util.exe(PTIWrapper.createOrUpdate(SERIAL_NUMBER, "INTERFACE", new_nvPairs["INTF_NAME"], SOURCE,
+                                           ConfigPriority.CONFIG_PRIO_INTF, rmIds,
+                                           "int_vlan_internal", new_nvPairs))
+                                           
+        #Create VRF (if non-default VRF) and eBGP peering for VRF Lite
+        nvPairs = {"vrfName": intfVrf, "vrfDescription": "", "asn": fabricAsn,
+                   "NEIGHBOR_ASN": NEIGHBOR_ASN, "bgpPassword" : eBGPPassword, "bgpPasswordKeyType"  : eBGPPasswordKeyType,
+                   "NEIGHBOR_IP": NEIGHBOR_IP, "IPV6_NEIGHBOR": ""}
+        
+        Wrapper.print("Creating External_VRF_Lite_eBGP with nvPairs %s" % (nvPairs))
+        Util.exe(PTIWrapper.create(SERIAL_NUMBER, "SWITCH", "SWITCH", SOURCE,
+                                   ConfigPriority.CONFIG_PRIO_UNDERLAY_TOP_LVL1 + 1,
+                                   "External_VRF_Lite_eBGP", nvPairs))
+
+        if HSRP_IP != "":
+            Util.exe(PTIWrapper.createOrUpdate(SERIAL_NUMBER, "SWITCH", "SWITCH", POLICY_ID,"interface_hsrp_version",
+                                                                    {"VLAN_ID": DOT1Q_ID,
+                                                                     "HSRP_VERSION": "2",
+                                                                    }))
+            if HSRP_PRIORITY != "":
+                Util.exe(PTIWrapper.createOrUpdate(SERIAL_NUMBER, 
+                                                                "SWITCH", "SWITCH", POLICY_ID, 
+                                                                int(PRIORITY)+ 10, 0 - (int(PRIORITY)+10), 
+                                                                "interface_hsrp_priority",
+                                                                {"VLAN_ID": DOT1Q_ID,
+                                                                 "HSRP_GROUP": HSRP_GROUP_INTERNAL,
+                                                                 "PRIORITY": HSRP_PRIORITY
+                                                                }))
+                                                                        
+                      
+            
+            Util.exe(PTIWrapper.createOrUpdate(SERIAL_NUMBER, 
+                                                            "SWITCH", "SWITCH", POLICY_ID, 
+                                                            int(PRIORITY)+ 10, 0 - (int(PRIORITY)+10), 
+                                                            "interface_hsrp_vip",
+                                                            {"VLAN_ID": DOT1Q_ID,
+                                                             "HSRP_VIP": HSRP_IP,
+                                                             "HSRP_GROUP": HSRP_GROUP_INTERNAL,
+                                                            }))
+
+        #Add new vPC VLAN
+        Wrapper.print("==========vPC VLAN add==========")
+        if VPC_ID_1 and VPC_ID_2:
+            Util.exe(PTIWrapper.create(SERIAL_NUMBER,
+                                                        "SWITCH", "SWITCH", POLICY_ID,
+                                                        int(PRIORITY)+ 10, 0 - (int(PRIORITY)+10),
+                                                        addVLANSubTemplateName,{
+                                                            "VPC_ID_1" : VPC_ID_1,
+                                                            "VPC_ID_2" : VPC_ID_2,
+					                                		"VLAN_ID" : DOT1Q_ID,
+                                                    }))
+
+        respObj = WrappersResp.getRespObj()
+        respObj.setSuccessRetCode()
+        return respObj
+    except respObjError as e:
+        return e.value
+
+def delete(Force=False):
+    try:
+        if Force:
+            IP, PREFIX = IP_MASK.split("/")
+            Wrapper.print("IPMask %s PREFIX %s" % (IP_MASK, PREFIX))
+
+            v4SkipDel = True if PREFIX and (int(PREFIX) < 8 or int(PREFIX) > 31) else False
+            if v4SkipDel:
+                Wrapper.print("Ext_VRF_Lite_Jython (intf %s): upgrade case, just skip so that template validation "
+                              "error reports warning and no change on ptis" % (src_intf))
+                respObj = WrappersResp.getRespObj()
+                respObj.setSuccessRetCode()
+                return respObj
+
+        intfName = "Vlan" + str(DOT1Q_ID)
+
+        #if called by topdown, SOURCE will be set. Then user will not be able to edit from View/Edit policies
+        jython_source  = ""
+        try:
+            jython_source = SOURCE
+        except:
+            jython_source = POLICY_ID
+            pass
+        
+        SOURCE = jython_source
+        Wrapper.print("Source of VRF Lite Jython is %s for switch %s" %(SOURCE, SERIAL_NUMBER))
+        
+        #Get all PTIs for the SOURCE VRF Lite Extension in external fabric
+        wrappersResp = PTIWrapper.get(SERIAL_NUMBER, SOURCE)
+        if wrappersResp.isRetCodeSuccess():
+            vrfLitePolicies = wrappersResp.getValue()
+            for policy in vrfLitePolicies:
+                Wrapper.print("VRF Lite policy for External Fabric DELETE: %s %s" % (policy.getPolicyId(), policy.getTemplateName()))
+                if policy.getTemplateName() == "int_vlan_internal":
+                    PTIWrapper.deleteInstance(policy.getPolicyId())
+                else:
+                    PTIWrapper.markDeleteInstance(policy.getPolicyId())
+
+        #Get the PTI for the SVI if any exists, this is to take care of the case where SVI is already created and then VRF Lite Jython is called
+        srchOpt = CtrlPolicySearch()
+        srchOpt.setSerialNumber(SERIAL_NUMBER)
+        srchOpt.setEntityName(intfName)
+        srchOpt.setTemplateContentType("PYTHON")
+        SVIPolicies = Util.exe(PTIWrapper.getPTIs(srchOpt))
+        if SVIPolicies:
+            for policy in SVIPolicies:
+                Wrapper.print("SVI policy for External Fabric DELETE: %s %s" % (policy.getPolicyId(), policy.getTemplateName()))
+                PTIWrapper.deleteInstance(policy.getPolicyId())
+
+        respObj = WrappersResp.getRespObj()
+        respObj.setSuccessRetCode()
+        return respObj
+    except respObjError as e:
+        return e.value
+
+##

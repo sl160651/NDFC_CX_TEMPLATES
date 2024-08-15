@@ -1,0 +1,49 @@
+##template properties
+name =cx_bgp_aggergate;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2023 by Cisco Systems, Inc.
+#    All rights reserved.
+
+
+@(IsMandatory=true, DisplayName="BGP ASN", Description="BGP ASN")
+integer BGP_ASN;
+
+@(IsMandatory=true, Description="IP Prefix (e.g. 192.168.10.0/24)", DisplayName="IP Network prefix/Mask")
+ipV4AddressWithSubnet IP_PRE;
+
+@(IsMandatory=false, DisplayName="Summary-only", Description="Check if summary only is required")
+boolean SUM;
+  
+
+
+##
+##template content
+
+if SUM == true {
+
+router bgp $$BGP_ASN$$
+  address-family ipv4 unicast
+    aggergte $$IP_PRE$$ summary-only
+}
+
+else {
+router bgp $$BGP_ASN$$
+  address-family ipv4 unicast
+    aggregate $$IP_PRE$$ 
+}
+
+
+##

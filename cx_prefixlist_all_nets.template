@@ -1,0 +1,27 @@
+##template properties
+name =cx_prefixlist_all_nets;
+description = prefix list to match 0.0.0.0/0 le32;
+tags = ;
+userDefined = true;
+supportedPlatforms = N9K;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2022 by Cisco Systems, Inc.
+#    All rights reserved.
+
+
+
+##
+##template content
+
+ip prefix-list ALL-NETS seq 5 permit 0.0.0.0/0 le 32
+
+##

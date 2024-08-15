@@ -1,0 +1,43 @@
+##template properties
+name =cx_bfd_interval;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = N9K;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2023 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(DisplayName="Min TX", Description="Min TX Interval")
+integer MIN_TX {
+  min = 50;
+  max = 999;
+};
+
+@(DisplayName="Min RX", Description="Min RX Interval")
+integer MIN_RX {
+  min = 50;
+  max = 999;
+};
+
+@(DisplayName="Multiplier", Description="Multiplier")
+integer MULTIPLIER {
+  min = 1;
+  max = 50;
+};
+
+##
+##template content
+
+bfd interval $$MIN_TX$$ min_rx $$MIN_RX$$ multiplier $$MULTIPLIER$$
+
+##

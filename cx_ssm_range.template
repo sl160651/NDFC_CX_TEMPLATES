@@ -1,0 +1,29 @@
+##template properties
+name =cx_ssm_range;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = N9K;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2018 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(IsMulticastGroupSubnet=true, DisplayName="SSM Group", Description="Multicast Group Range for SSM")
+ipV4AddressWithSubnet MCAST_GRP;
+
+##
+##template content
+
+ip pim ssm range $$MCAST_GRP$$
+
+##
+

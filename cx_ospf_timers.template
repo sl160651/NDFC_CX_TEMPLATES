@@ -1,0 +1,60 @@
+##template properties
+name =cx_ospf_timers;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = N9K;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2018 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(DisplayName="OSPF Process Tag", Description="OSPF routing process tag")
+string OSPF_TAG {
+  minLength = 1;
+  maxLength = 20;
+};
+
+@(DisplayName="SPF Calculation Timers", Description="delay timer")
+integer SPF_THR_1 {
+};
+
+@(DisplayName="SPF Calculation Timers", Description="Hold timer")
+integer SPF_THR_2 {
+};
+
+@(DisplayName="SPF Calculation Timers", Description="Maximum time")
+integer SPF_THR_3 {
+};
+
+@(DisplayName="LSA rrival time", Description="In Milliseconds")
+integer LSA_ARR {
+};
+
+@(DisplayName="LSA Throttle Timers", Description="delay timer")
+integer LSA_THR_1 {
+};
+
+@(DisplayName="LSA Throttle Timers", Description="Hold timer")
+integer LSA_THR_2 {
+};
+
+@(DisplayName="LSA Throttle Timers", Description="Maximum time")
+integer LSA_THR_3 {
+};
+##
+##template content
+
+router ospf $$OSPF_TAG$$
+  timers throttle spf $$SPF_THR_1$$ $$SPF_THR_2$$ $$SPF_THR_3$$
+  timers lsa-arrival $$LSA_ARR$$
+  timers throttle lsa $$LSA_THR_1$$ $$LSA_THR_2$$ $$LSA_THR_3$$
+##

@@ -1,0 +1,57 @@
+##template properties
+name =cx_sub_bgp_neighbor_inherit;
+description = sub template of cx_bgp_neighbor_inherit;
+tags =internal;
+userDefined = true;
+supportedPlatforms = N9K;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+@(IsInternal=true, Description="BGP Autonomous System number")
+string SUB_BGP_AS;
+
+@(IsInternal=true, Description="VRF Name")
+string SUB_VRF_NAME;
+
+@(IsInternal=true, Description="IP address of BGP neighbor")
+ipV4Address SUB_BGP_NEIGHBOR_IP
+{
+isAllowSubnet=true;
+};
+
+@(IsInternal=true, Description="Neighbor template name")
+string SUB_TEMPLATE_NAME;
+
+@(IsInternal=true, Description="BGP Neighbor Description")
+string SUB_DESCRIPTION;
+
+##
+##template content
+if ($$SUB_VRF_NAME$$ == "") {
+router bgp $$SUB_BGP_AS$$
+  neighbor $$SUB_BGP_NEIGHBOR_IP$$
+    if ($$SUB_TEMPLATE_NAME$$ != "") {
+    inherit peer $$SUB_TEMPLATE_NAME$$
+    }
+    if ($$SUB_DESCRIPTION$$ != "") {
+    description $$SUB_DESCRIPTION$$
+    }
+}
+else:{
+router bgp $$SUB_BGP_AS$$
+  vrf $$SUB_VRF_NAME$$
+    neighbor $$SUB_BGP_NEIGHBOR_IP$$
+      if ($$SUB_TEMPLATE_NAME$$ != "") {
+      inherit peer $$SUB_TEMPLATE_NAME$$
+      }
+      if ($$SUB_DESCRIPTION$$ != "") {
+      description $$SUB_DESCRIPTION$$
+      }
+}
+##

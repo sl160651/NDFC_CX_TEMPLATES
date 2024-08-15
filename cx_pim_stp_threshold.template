@@ -1,0 +1,28 @@
+##template properties
+name =cx_pim_stp_threshold;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = N9K;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2020 by Cisco Systems, Inc.
+#    All rights reserved.
+
+
+@(DisplayName="stp-threshold group", Description="pim threshhold group-list")
+string GRP_LIST;
+
+
+##
+##template content
+ip pim spt-threshold infinity group-list $$GRP_LIST$$
+##

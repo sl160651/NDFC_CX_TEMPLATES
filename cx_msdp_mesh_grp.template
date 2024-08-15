@@ -1,0 +1,30 @@
+##template properties
+name =cx_msdp_mesh_grp;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = N9K;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2020 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(DisplayName="PEER IP Address", Description="IP address of the MSDP Peer")
+ipV4Address PEER_IP;
+
+@(DisplayName="MSDP Mesh-Group", Description="MSDP Mesh Group Name")
+string GRP_NAME;
+
+
+##
+##template content
+ip msdp mesh-group $$PEER_IP$$ $$GRP_NAME$$ 
+##

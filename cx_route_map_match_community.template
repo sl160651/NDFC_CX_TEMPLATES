@@ -1,0 +1,50 @@
+##template properties
+name =cx_route_map_match_community;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = N9K;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+#    Copyright (c) 2020 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(DisplayName="Route Map Name", Description="Name of route map with max. 63 characters, example route_map_test")
+string ROUTE_MAP_NAME {
+    maxLength = 63;
+};
+
+@(DisplayName="Route Map Action", Description="Route map permit or deny operation")
+enum ROUTE_MAP_ACTION {
+    validValues=permit,deny;
+    defaultValue=permit;
+};
+
+@(DisplayName="Route Map Sequence Number", Description="Route map match sequence number, example 10")
+integer SEQ_NUM {
+    min = 0;
+    max = 65535;
+    defaultValue=10;
+};
+
+@(IsMandatory=false, DisplayName="Extended community List name")
+string COM_LIST {
+    maxLength = 63;
+};
+
+
+##
+##template content
+
+route-map $$ROUTE_MAP_NAME$$ $$ROUTE_MAP_ACTION$$ $$SEQ_NUM$$
+  match community $$COM_LIST$$
+
+  
+##

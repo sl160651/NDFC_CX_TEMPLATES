@@ -1,0 +1,47 @@
+##template properties
+name =cx_standard_community_list;
+description = create community list;
+tags = ;
+userDefined = true;
+supportedPlatforms = N9K;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2018 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(DisplayName="Community list name", Description="Standard community list name")
+string NAME {
+  minLength = 1;
+  maxLength = 63;
+};
+
+@(DisplayName="Sequance number")
+integer SEQ {
+  min = 1;
+  max = 100000000;
+};
+
+@(DisplayName="Action", Description="permit or deny")
+enum ACTION {
+  validValues = permit,deny;
+};
+
+@(DisplayName="Extended community value" Description="extended community format AS:nnn max value 65535:65535")
+string COM {
+  regularExpr=[0-9]+:[0-9]+;
+};
+
+##
+##template content
+
+ip community-list standard $$NAME$$ seq $$SEQ$$ $$ACTION$$ $$COM$$
+
+##

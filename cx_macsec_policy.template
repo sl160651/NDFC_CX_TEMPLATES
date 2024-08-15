@@ -1,0 +1,54 @@
+##template properties
+name =cx_macsec_policy;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = N9K,All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2020 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(DisplayName="Policy Name")
+string POLICY_NAME;
+
+@(DisplayName="Cipher Suite", Description="Configure Cipher Suite")
+enum MACSEC_CIPHER_SUITE {
+validValues=GCM-AES-128,GCM-AES-256,GCM-AES-XPN-128,GCM-AES-XPN-256;
+};
+
+@(DisplayName="Priority", Description="Key server priority")
+integerRange KEY_PRIORITY {
+validValues=0-255;
+defaultValue=0;
+};
+
+@(DisplayName="Window Size", Description="Window size value")
+integerRange WINDOW {
+validValues=0-596000000;
+defaultValue=512;
+};
+
+@(DisplayName="Expiry time", Description="Time in seconds minimum 60")
+integerRange EXPIRE {
+validValues=60-2592000;
+defaultValue=100;
+};
+
+##
+##template content
+
+macsec policy $$POLICY_NAME$$
+  cipher-suite $$MACSEC_CIPHER_SUITE$$
+  key-server-priority $$KEY_PRIORITY$$
+  window-size $$WINDOW$$
+  sak-expiry-time $$EXPIRE$$
+##

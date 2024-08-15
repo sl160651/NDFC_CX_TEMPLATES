@@ -1,0 +1,50 @@
+##template properties
+name =cx_as_path_access_list;
+description = create as-path access-list;
+tags = ;
+userDefined = true;
+supportedPlatforms = N9K;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2018 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(DisplayName="name", Description="SAS-PATH Access-list Name list name")
+string NAME {
+  minLength = 1;
+  maxLength = 63;
+};
+
+@(DisplayName="Sequance number")
+integer SEQ {
+  min = 1;
+  max = 100000000;
+  defaultValue = 10;
+};
+
+@(DisplayName="Action", Description="permit or deny")
+enum ACTION {
+  validValues = permit,deny;
+  defaultValue = permit;
+};
+
+@(DisplayName="AS PAth access List ", Description="AS path access list RegEx entries")
+string LIST {
+  minLength = 1;
+  maxLength = 63;
+};
+
+##
+##template content
+
+ip as-path access-list $$NAME$$ seq $$SEQ$$ $$ACTION$$ $$LIST$$
+
+##

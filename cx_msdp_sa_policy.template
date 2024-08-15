@@ -1,0 +1,35 @@
+##template properties
+name =cx_msdp_sa_policy;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = N9K;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2020 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(DisplayName="PEER IP Address", Description="IP address of the MSDP Peer")
+ipV4Address PEER_IP;
+
+@(DisplayName="MSDP sa policy", Description="Source Active Route-map")
+string ROUTE_MAP;
+
+@(DisplayName="Direction", Description="Route-map applied direction")
+enum DIR {
+    validValues=in,out;
+}; 
+
+
+##
+##template content
+ip msdp peer sa-policy $$PEER_IP$$ $$ROUTE_MAP$$ $$DIR$$
+##

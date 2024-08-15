@@ -1,0 +1,34 @@
+##template properties
+name =cx_msdp_peer;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = N9K;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2020 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(IsMandatory="ipv4!=null", DisplayName="PEER IP Address", Description="IP address of the MSDP Peer")
+ipV4Address PEER_IP;
+
+@(DisplayName="MSDP Source Interface", Description="Source Interface used for MSDP Connection")
+interface INTF_NAME;
+
+
+@(IsMandatory="false", DisplayName="Remote BGP AS #", Description="BGP Autonomous System number of the Peer")
+string REMOTE_BGP_AS;
+
+
+##
+##template content
+ip msdp peer $$PEER_IP$$ connect-source $$INTF_NAME$$ remote-as $$REMOTE_BGP_AS$$
+##

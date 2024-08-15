@@ -1,0 +1,36 @@
+##template properties
+name =cx_routemap_set_nxt_hp_out;
+description = route map to set a next hop matched to a prefix-list;
+tags = ;
+userDefined = true;
+supportedPlatforms = N9K;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+#    Copyright (c) 2020 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(DisplayName="Gateway IP", Description="Pervasive Gateway IP")
+ipAddress GATEWAY_IP;
+
+@(DisplayName="Prefix-List Name", Description="Name of Prefix-List with max. 63 characters, example ALL-NETS")
+string ACL_NAME {
+    maxLength = 63;
+};
+
+
+
+##
+##template content
+
+route-map SET-NEXT-HOP-OUT permit 5
+  match ip address prefix-list $$ACL_NAME$$
+  set ip next-hop $$GATEWAY_IP$$
+  
+##

@@ -1,0 +1,69 @@
+##template properties
+name =cx_ipv4_vrf_static_route_with_tag;
+description = IPv4 static route in custom vrf with an optional tag. Next hop can be an IP or an interface.;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2023 by Cisco Systems, Inc.
+#    All rights reserved.
+
+
+@(IsMandatory=true, DisplayName="VRF Name", Description="Name of the VRF")
+string VRF_NAME;
+
+@(IsMandatory=true, Description="IP Prefix (e.g. 192.168.10.1/24)", DisplayName="Route IP Address/Mask")
+ipV4AddressWithSubnet IP_MASK;
+
+@(IsMandatory=false, DisplayName="IP Tag", Description="Tag for the static route")
+integer TAG;
+
+@(IsMandatory=false, Description="Next Hop IP address", DisplayName="Next Hop IP Address")
+ipV4Address NEXT_HOP_IP;
+
+@(IsMandatory=false, DisplayName="Egress Interface", Description="Egress Interface to reach IP prefix")
+interface DST_INTF;
+
+##
+##template content
+
+if ($$NEXT_HOP_IP$$ != "") {
+
+if ($$TAG$$ != "") {
+vrf context $$VRF_NAME$$
+  ip route $$IP_MASK$$ $$NEXT_HOP_IP$$ tag $$TAG$$
+}
+else {
+vrf context $$VRF_NAME$$
+  ip route $$IP_MASK$$ $$NEXT_HOP_IP$$
+}
+
+}
+else {
+
+if ($$DST_INTF$$ != "") {
+  
+if ($$TAG$$ != "") {
+vrf context $$VRF_NAME$$
+  ip route $$IP_MASK$$ $$DST_INTF$$ tag $$TAG$$
+}
+else {
+vrf context $$VRF_NAME$$
+  ip route $$IP_MASK$$ $$DST_INTF$$
+}
+
+}
+  
+}
+
+
+##

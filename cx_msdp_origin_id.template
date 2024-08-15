@@ -1,0 +1,29 @@
+##template properties
+name =cx_msdp_origin_id;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = N9K;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2018 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(DisplayName="msdp origin_id", Description="msdp originator interface")
+interface INTERFACE;
+
+##
+##template content
+
+ip msdp originator-id $$INTERFACE$$
+
+##
+

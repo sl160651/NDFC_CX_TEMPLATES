@@ -1,0 +1,82 @@
+##template properties
+name =cx_base_aaa;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+@(DisplayName="AAA group", Description="Name of AAA Group")
+string AAA_GROUP {
+  minLength = 1;
+  maxLength = 127;
+};
+
+@(IsMandatory=True, DisplayName="Enable Authorization", Description="Enable Authorization")
+boolean AUTHORIZATION {
+  defaultValue=true;
+};
+@(IsMandatory=True, DisplayName="Enable Accounting", Description="Enable Accounting")
+boolean ACCOUNTING {
+  defaultValue=true;
+};
+@(IsMandatory=True, DisplayName="Login Parameters", Description="Configures the quiet mode time period")
+boolean LOGIN_PARAMETERS {
+  defaultValue=true;
+};
+@(IsMandatory=False, IsMandatory="LOGIN_PARAMETERS==true", IsShow="LOGIN_PARAMETERS==true", DisplayName="Time period in seconds", Description="Valid values range from 1 to 65535.")
+integer TIME {
+  defaultValue = 1800;
+  min = 1;
+  max = 65535;
+};
+@(IsMandatory=False, IsMandatory="LOGIN_PARAMETERS==true", IsShow="LOGIN_PARAMETERS==true", DisplayName="Fail attempts max value", Description="Valid values range from 1 to 65535.")
+integer ATTEMPTS {
+  defaultValue = 10;
+  min = 1;
+  max = 65535;
+};
+@(IsMandatory=False, IsMandatory="LOGIN_PARAMETERS==true", IsShow="LOGIN_PARAMETERS==true", DisplayName="Watch period for fail attempts", Description="Valid values range from 1 to 65535.")
+integer WITHIN {
+  defaultValue = 30;
+  min = 1;
+  max = 65535;
+};
+
+
+
+
+##
+##template content
+
+aaa authentication login default group $$AAA_GROUP$$
+aaa authentication login console group $$AAA_GROUP$$
+aaa authentication login error-enable
+aaa authentication login default fallback error local
+aaa authentication login console fallback error local
+
+if ($$AUTHORIZATION$$ == "true") {
+aaa authorization config-commands default group $$AAA_GROUP$$ local
+aaa authorization commands default group $$AAA_GROUP$$ local
+aaa authorization config-commands console group $$AAA_GROUP$$ local $$WITHIN$$
+aaa authorization commands console group $$AAA_GROUP$$ local
+}
+
+if ($$ACCOUNTING$$ == "true") {
+aaa accounting default group $$AAA_GROUP$$
+}
+
+if ($$LOGIN_PARAMETERS$$ == "true") {
+system login block-for $$TIME$$ attempts $$ATTEMPTS$$ within $$WITHIN$$
+}
+
+
+
+##

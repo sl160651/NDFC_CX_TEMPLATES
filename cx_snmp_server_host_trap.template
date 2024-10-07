@@ -1,0 +1,72 @@
+##template properties
+name =cx_snmp_server_host_trap;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = N9K;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2018-2023 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(IsMandatory=true, DisplayName="IP Address", Description="IPv4/v6 Address Of SNMP Notification Host")
+ipAddressWithoutPrefix IP;
+
+@(IsMandatory=true, DisplayName="SNMP Version", Description="SNMP Version To Use For <br/>Notification Messages")
+enum VER {
+validValues=1,2c,3;
+defaultValue=2c;
+};
+
+@(IsMandatory=true, DisplayName="Community String or <br/>SNMPv3 user name", Description="Max Size:32")
+string CS {
+defaultValue=public;
+minLength = 1;
+maxLength = 32;
+};
+
+@(IsMandatory=false, DisplayName="V3 authKey/PrivKey", Description="Use the SNMPv3 authNoPriv or authPriv Security Level")
+enum SECURITY_LEVEL {
+validValues=auth,priv;
+defaultValue=priv;
+};
+
+@(IsMandatory=false, DisplayName="Source interface for Traps")
+string SRC_INTF;
+
+@(IsMandatory=false, DisplayName="VRF on switch to use to send Traps")
+string VRF;
+
+@(IsMandatory=true, DisplayName="UDP port number", Description="The notification host's <br/>UDP port number (Min:0, Max:65535)")
+integer UDP_PORT {
+defaultValue=162;
+min=0;
+max=65535;
+};
+
+##
+##template content
+if ($$VER$$ == "3") {
+snmp-server host $$IP$$ traps version $$VER$$ $$SECURITY_LEVEL$$ $$CS$$ udp-port $$UDP_PORT$$
+}
+else {
+snmp-server host $$IP$$ traps version $$VER$$ $$CS$$ udp-port $$UDP_PORT$$
+}
+
+if ($$SRC_INTF$$ != "") {
+snmp-server host $$IP$$ source-interface $$SRC_INTF$$ udp-port $$UDP_PORT$$
+}
+
+if ($$VRF$$ != "") {
+snmp-server host $$IP$$ use-vrf $$VRF$$ udp-port $$UDP_PORT$$
+}
+
+##

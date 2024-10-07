@@ -1,0 +1,27 @@
+##template properties
+name =cx_snmp_community;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+@(IsMandatory=True, DisplayName="SNMP Community", Description="SNMP Community")
+string SNMP_COMM;
+
+@(IsMandatory=False, DisplayName="SNMP Community ACL", Description="Name of the ACL")
+string SNMP_COMM_ACL;
+##
+##template content
+snmp-server community $$SNMP_COMM$$ group network-operator
+if ($$SNMP_COMM_ACL$$ != "") {
+snmp-server community $$SNMP_COMM$$ use-ipv4acl $$SNMP_COMM_ACL$$
+}
+##

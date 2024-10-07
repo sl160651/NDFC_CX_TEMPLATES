@@ -1,0 +1,32 @@
+##template properties
+name =cx_line_console;
+description = Configure Line Console;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2020 by Cisco Systems, Inc.
+#    All rights reserved.
+@(IsMandatory=true, DisplayName="Timeout", Description="Enter timeout in minutes, 0 to disable")
+long TIMEOUT {
+    min=0;
+    max=525600;
+    defaultValue=5;
+};
+
+##
+##template content
+
+line console
+  exec-timeout $$TIMEOUT$$
+
+##

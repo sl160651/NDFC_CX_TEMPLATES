@@ -1,0 +1,47 @@
+##template properties
+name =cx_ntp_config;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+@(IsMandatory=True, DisplayName="Source-Interface", Description="Source interface to be used to reach ntp server, default mgmt0")
+string SOURCE_INTERFACE {
+  defaultValue=mgmt0;
+};
+
+@(IsMandatory=False, DisplayName="Access-group Option", Description="Access-group Option")
+enum ACCESS_GROUP {
+    validValues=peer,query-only,serve,serve-only;
+    defaultValue=peer;
+};
+
+@(IsMandatory=False, DisplayName=" Name of access list", Description="Name of access list")
+string ACL_NAME;
+
+@(IsMandatory=True, DisplayName="Access-group Match-all", Description="The match-all keyword enables the access group options to be scanned in the following order, from least restrictive to most restrictive")
+boolean ACL_MATCH_ALL {
+  defaultValue=false;
+};
+
+##
+##template content
+ntp source-interface $$SOURCE_INTERFACE$$
+
+if ($$ACL_NAME$$ != "") {
+ntp access-group $$ACCESS_GROUP$$ $$ACL_NAME$$
+}
+
+if ($$ACL_MATCH_ALL$$ == "true") {
+ntp access-group match-all
+}
+
+##

@@ -1,0 +1,136 @@
+##template properties
+name =cx_sub_bgp_peer_template;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+@(IsInternal=true)
+string SUB_BGP_AS;
+
+@(IsInternal=true)
+string SUB_TEMPLATE_NAME;
+
+@(IsInternal=true)
+string SUB_BGP_REMOTE_AS;
+
+@(IsInternal=true)
+string SUB_BGP_LOCAL_AS;
+
+@(IsInternal=true)
+string SUB_BGP_PASSWORD;
+
+@(IsInternal=true)
+interface SUB_UPDATE_INTF_NAME;
+
+@(IsInternal=true)
+integer SUB_EBGP_MULTIHOP;
+
+@(IsInternal=true)
+boolean SUB_BGP_TIMERS;
+
+@(IsInternal=true)
+integer SUB_BGP_KEEPALIVE;
+
+@(IsInternal=true)
+integer SUB_BGP_HOLDTIME;
+
+@(IsInternal=true)
+boolean SUB_SOFT_RECON_INB;
+
+@(IsInternal=true)
+boolean SUB_ENABLE_BFD;
+
+@(IsInternal=true)
+boolean SUB_NEXT_HOP_SELF;
+
+@(IsInternal=true)
+boolean SUB_SEND_COM_BOTH;
+
+@(IsInternal=true)
+string SUB_ROUTE_MAP_OUT;
+
+@(IsInternal=true)
+string SUB_ROUTE_MAP_IN;
+
+@(IsInternal=true)
+integer SUB_MAX_PREFIXES;
+
+@(IsInternal=true)
+boolean SUB_DEFAULT_ORIGINATE;
+
+@(IsInternal=true)
+string SUB_DEFAULT_ORIGINATE_ROUTE_MAP;
+
+@(IsInternal=true)
+string SUB_CONF;
+
+
+#    Copyright (c) 2018-2019 by Cisco Systems, Inc.
+#    All rights reserved.
+
+##
+##template content
+
+router bgp $$SUB_BGP_AS$$
+  template peer $$SUB_TEMPLATE_NAME$$
+    if ($$SUB_BGP_REMOTE_AS$$ != "") {
+    remote-as $$SUB_BGP_REMOTE_AS$$
+    }
+    if ($$SUB_ENABLE_BFD$$ != "false") {
+    bfd
+    }
+    if ($$SUB_BGP_LOCAL_AS$$ != "") {
+    local-as $$SUB_BGP_LOCAL_AS$$ no-prepend replace-as
+    }
+    if ($$SUB_BGP_PASSWORD$$ != "") {
+    password 3 $$SUB_BGP_PASSWORD$$
+    }
+    if ($$SUB_UPDATE_INTF_NAME$$ != "") {
+    update-source $$SUB_UPDATE_INTF_NAME$$
+    }
+    if ($$SUB_EBGP_MULTIHOP$$ != "") {
+    ebgp-multihop $$SUB_EBGP_MULTIHOP$$
+    }
+    if ($$SUB_BGP_TIMERS$$ != "false") {
+    timers $$SUB_BGP_KEEPALIVE$$ $$SUB_BGP_HOLDTIME$$
+    }
+    address-family ipv4 unicast
+      if ($$SUB_SOFT_RECON_INB$$ != "false") {
+      soft-reconfiguration inbound always
+      }
+      if ($$SUB_NEXT_HOP_SELF$$ != "false") {
+      next-hop-self
+      }
+      if ($$SUB_SEND_COM_BOTH$$ != "false") {
+      send-community
+      send-community extended
+      }
+      if ($$SUB_ROUTE_MAP_OUT$$ != "") {
+      route-map $$SUB_ROUTE_MAP_OUT$$ out
+      }
+      if ($$SUB_ROUTE_MAP_IN$$ != "") {
+      route-map $$SUB_ROUTE_MAP_IN$$ in
+      }
+      if ($$SUB_MAX_PREFIXES$$ != "") {
+      maximum-prefix $$SUB_MAX_PREFIXES$$
+      }
+      if ($$SUB_DEFAULT_ORIGINATE$$ != "false") {
+      if ($$SUB_DEFAULT_ORIGINATE_ROUTE_MAP$$ != ""){
+      default-originate route-map $$SUB_DEFAULT_ORIGINATE_ROUTE_MAP$$
+      }
+      else:{
+      default-originate
+      }
+      }
+$$SUB_CONF$$
+##

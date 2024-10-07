@@ -1,0 +1,310 @@
+##template properties
+name =cx_bgp_peer_template;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = PYTHON;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+@(DisplayName="Template Name", Description="Peer template name")
+string TEMPLATE_NAME;
+
+@(IsMandatory=False, DisplayName="Neighbor BGP ASN", Description="1-4294967295 | 1-65535[.0-65535] - BGP Autonomous System Number of the neighbor")
+string BGP_REMOTE_AS{
+    minLength=1;
+    maxLength=11;
+    regularExpr=^(((\+)?[1-9]{1}[0-9]{0,8}|(\+)?[1-3]{1}[0-9]{1,9}|(\+)?[4]{1}([0-1]{1}[0-9]{8}|[2]{1}([0-8]{1}[0-9]{7}|[9]{1}([0-3]{1}[0-9]{6}|[4]{1}([0-8]{1}[0-9]{5}|[9]{1}([0-5]{1}[0-9]{4}|[6]{1}([0-6]{1}[0-9]{3}|[7]{1}([0-1]{1}[0-9]{2}|[2]{1}([0-8]{1}[0-9]{1}|[9]{1}[0-5]{1})))))))))|([1-5]\d{4}|[1-9]\d{0,3}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])(\.([1-5]\d{4}|[1-9]\d{0,3}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5]|0))?)$;
+};
+
+@(IsMandatory=False, DisplayName="Local BGP ASN", Description="1-4294967295 | 1-65535[.0-65535]")
+string BGP_LOCAL_AS{
+    minLength=1;
+    maxLength=11;
+    regularExpr=^(((\+)?[1-9]{1}[0-9]{0,8}|(\+)?[1-3]{1}[0-9]{1,9}|(\+)?[4]{1}([0-1]{1}[0-9]{8}|[2]{1}([0-8]{1}[0-9]{7}|[9]{1}([0-3]{1}[0-9]{6}|[4]{1}([0-8]{1}[0-9]{5}|[9]{1}([0-5]{1}[0-9]{4}|[6]{1}([0-6]{1}[0-9]{3}|[7]{1}([0-1]{1}[0-9]{2}|[2]{1}([0-8]{1}[0-9]{1}|[9]{1}[0-5]{1})))))))))|([1-5]\d{4}|[1-9]\d{0,3}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])(\.([1-5]\d{4}|[1-9]\d{0,3}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5]|0))?)$;
+};
+
+@(IsMandatory=False, DisplayName="eBGP Password", Description="Encrypted eBGP Password Hex String")
+string BGP_PASSWORD {
+    minLength = 1;
+    maxLength = 130;
+    regularExpr=^[a-fA-F0-9]+$;
+};
+
+@(IsMandatory=False, DisplayName="BGP Update-Source Interface", Description="Source of BGP session and updates")
+interface UPDATE_INTF_NAME;
+
+
+@(IsMandatory=False, DisplayName="eBGP multihop", Description="eBGP time-to-live (TTL) value")
+integer EBGP_MULTIHOP {
+  min = 2;
+  max = 255;
+};
+
+@(IsMandatory=false, DisplayName="Modify BGP timers")
+boolean BGP_TIMERS {
+    defaultValue=false;
+};
+
+@(IsMandatory="BGP_TIMERS==true", IsShow="BGP_TIMERS==true", DisplayName="BGP keepalive", Description="BGP keepalive")
+integer BGP_KEEPALIVE {
+  min = 0;
+  max = 3600;
+};
+
+@(IsMandatory="BGP_TIMERS==true", IsShow="BGP_TIMERS==true", DisplayName="BGP holdtime", Description="BGP holdtime")
+integer BGP_HOLDTIME {
+  min = 0;
+  max = 3600;
+};
+
+
+@(IsMandatory=False, DisplayName="Enable soft-reconfiguration inbound")
+boolean SOFT_RECON_INB {
+    defaultValue=true;
+};
+
+@(IsMandatory=False, DisplayName="Enable send-community Both")
+boolean SEND_COM_BOTH {
+    defaultValue=true;
+};
+
+@(IsMandatory=False, DisplayName="Enable BFD")
+boolean ENABLE_BFD {
+  defaultValue=true;
+};
+
+@(IsMandatory=False, DisplayName="Next Hop Self")
+boolean NEXT_HOP_SELF {
+  defaultValue=false;
+};
+
+@(IsMandatory=False, DisplayName="Route-map name out", Description="BGP policy to outgoing routes")
+string ROUTE_MAP_OUT;
+
+@(IsMandatory=False, DisplayName="Route-map name in", Description="BGP policy to inbound routes")
+string ROUTE_MAP_IN;
+
+@(IsMandatory=False, DisplayName="Maximum Prefix", Description="Sets the maximum number of prefixes allowed from this peer.")
+integer MAX_PREFIXES {
+  min = 1;
+  max = 300000;
+};
+
+@(IsMandatory=false, DisplayName="Advertises the default route")
+boolean DEFAULT_ORIGINATE {
+    defaultValue=false;
+};
+
+@(IsMandatory=False, IsShow="DEFAULT_ORIGINATE==true", DisplayName="Default Route Route-map name", Description="BGP policy to default route")
+string DEFAULT_ORIGINATE_ROUTE_MAP;
+
+@(IsMandatory=false, IsMultiLineString=true, DisplayName="Peer Template Freeform Config", Description="Additional Template configuration. Note ! All configs should strictly match 'show run' output, with respect to case and newlines.")
+string CONF;
+
+
+#    Copyright (c) 2018-2019 by Cisco Systems, Inc.
+#    All rights reserved.
+
+##
+##template content
+
+from com.cisco.dcbu.vinci.rest.services.jython import PTIWrapper
+from com.cisco.dcbu.vinci.rest.services.jython import WrappersResp
+from com.cisco.dcbu.vinci.rest.services.jython import FabricWrapper
+from com.cisco.dcbu.vinci.rest.services.jython import Helper
+from com.cisco.dcbu.pti.resource import CtrlPolicySearch
+from com.cisco.dcbu.vinci.rest.services.jython import InventoryWrapper
+
+from utility import *
+
+def add():
+    try:
+        Wrapper.print("======== cx_bgp_neighbor_inherit_description add [%s] ==========" % SERIAL_NUMBER)
+
+        respObj = WrappersResp.getRespObj()
+        respObj.setSuccessRetCode()
+
+
+        #get fabricName 
+        invResp = InventoryWrapper.getFabricNameForSwitch(SERIAL_NUMBER)
+        if invResp.isRetCodeSuccess():
+            fabricName = invResp.getValue()
+        else:
+            respObj.setFailureRetCode()
+            return respObj
+
+        # Get fabric ASN 
+        fabricAsn = None
+        helperResp = Helper.getFabricAsn(fabricName)
+        if helperResp.isRetCodeSuccess():
+            fabricAsn = helperResp.getValue()
+        else:
+            Wrapper.print("Invalid ASN for Fabric %s" %(fabricName))
+            return helperResp
+
+        if ((fabricAsn == None) or (fabricAsn == "")):
+            # we still have an invalid ASN
+            errorMsg = ("Could not determine the BGP ASN for fabric [%s]" % (fabricName))
+            respObj.addErrorReport("INVALID_ASN", errorMsg)
+            respObj.setFailureRetCode()
+            return respObj
+        
+        try:
+          sub_bgp_remote_as = BGP_REMOTE_AS
+        except:
+          sub_bgp_remote_as = ""
+        
+        try:
+          sub_bgp_local_as = BGP_LOCAL_AS
+        except:
+          sub_bgp_local_as = ""
+        
+        try:
+          sub_bgp_password = BGP_PASSWORD
+        except:
+          sub_bgp_password = ""
+        
+        try:
+          sub_update_intf_name = UPDATE_INTF_NAME
+        except:
+          sub_update_intf_name = ""
+        
+        try:
+          sub_ebgp_multihop = EBGP_MULTIHOP
+        except:
+          sub_ebgp_multihop = ""
+        
+        try:
+          sub_bgp_timers = BGP_TIMERS
+          if sub_bgp_timers == "true":
+            sub_bgp_keepalive = SUB_BGP_KEEPALIVE
+            sub_bgp_holdtime = SUB_BGP_HOLDTIME
+          else:
+            sub_bgp_keepalive = ""
+            sub_bgp_holdtime = ""
+        except:
+          sub_bgp_timers = "false"
+          sub_bgp_keepalive = ""
+          sub_bgp_holdtime = ""
+      
+        try:
+          sub_soft_recon_inb = SOFT_RECON_INB
+        except:
+          sub_soft_recon_inb = "true"
+
+        try:
+          sub_send_com_both = SEND_COM_BOTH
+        except:
+          sub_send_com_both = "true"
+          
+        try:
+          sub_send_com_both = SEND_COM_BOTH
+        except:
+          sub_send_com_both = "true"
+
+        try:
+          sub_route_map_out = ROUTE_MAP_OUT
+        except:
+          sub_route_map_out = ""
+        
+        try:
+          sub_route_map_in = ROUTE_MAP_IN
+        except:
+          sub_route_map_in = ""
+
+        try:
+          sub_max_prefixes = MAX_PREFIXES
+        except:
+          sub_max_prefixes = ""
+
+        try:
+          sub_default_originate = DEFAULT_ORIGINATE
+          if sub_default_originate == "true":
+            sub_default_originate_route_map = DEFAULT_ORIGINATE_ROUTE_MAP
+          else:
+            sub_default_originate_route_map = ""
+        except:
+          sub_default_originate = "false"
+          sub_default_originate_route_map = ""
+
+        try:
+          sub_enable_bfd = ENABLE_BFD
+        except:
+          sub_enable_bfd = "true"
+          
+        try:
+          sub_next_hop_self = NEXT_HOP_SELF
+        except:
+          sub_next_hop_self = "false"
+
+        try:
+            freeform_conf = CONF
+            ff_conf = filter(None, freeform_conf.splitlines())
+            for cmd in ff_conf:
+                if not cmd.startswith("    "):
+                    errorMsg = ("Commands in 'Peer Template Freeform Config' need to have at least 4 leading spaces.")
+                    respObj.addErrorReport(("Error"), errorMsg)
+                    respObj.setFailureRetCode()
+                    return respObj
+        except:
+            freeform_conf = ""
+
+
+        delete()
+        
+        Util.exe(PTIWrapper.create(SERIAL_NUMBER, "SWITCH", "SWITCH", POLICY_ID,
+                                   "cx_sub_bgp_peer_template",
+                                   {"SUB_BGP_AS": fabricAsn,
+                                    "SUB_TEMPLATE_NAME": TEMPLATE_NAME,
+                                    "SUB_BGP_REMOTE_AS": sub_bgp_remote_as,
+                                    "SUB_BGP_LOCAL_AS": sub_bgp_local_as,
+                                    "SUB_BGP_PASSWORD": sub_bgp_password,
+                                    "SUB_UPDATE_INTF_NAME": sub_update_intf_name,
+                                    "SUB_EBGP_MULTIHOP": sub_ebgp_multihop,
+                                    "SUB_BGP_TIMERS": sub_bgp_timers,
+                                    "SUB_BGP_KEEPALIVE": sub_bgp_keepalive,
+                                    "SUB_BGP_HOLDTIME": sub_bgp_holdtime,
+                                    "SUB_SOFT_RECON_INB": sub_soft_recon_inb,
+                                    "SUB_SEND_COM_BOTH": sub_send_com_both,
+                                    "SUB_ROUTE_MAP_OUT": sub_route_map_out,
+                                    "SUB_ROUTE_MAP_IN": sub_route_map_in,
+                                    "SUB_MAX_PREFIXES": sub_max_prefixes,
+                                    "SUB_DEFAULT_ORIGINATE": sub_default_originate,
+                                    "SUB_DEFAULT_ORIGINATE_ROUTE_MAP":sub_default_originate_route_map,
+                                    "SUB_ENABLE_BFD": sub_enable_bfd,
+                                    "SUB_NEXT_HOP_SELF: sub_next_hop_self,
+                                    "SUB_CONF": freeform_conf
+                                   }))
+
+            
+
+        return respObj
+    except respObjError as e:
+        return e.value
+
+def delete():
+    try:
+        Wrapper.print("======== cx_bgp_neighbor_inherit_description delete[%s] ==========" % SERIAL_NUMBER)
+
+        respObj = WrappersResp.getRespObj()
+        srchOpt = CtrlPolicySearch()
+        srchOpt.setSerialNumber(SERIAL_NUMBER)
+        srchOpt.setSource(POLICY_ID)
+        ptiList = Util.exe(PTIWrapper.getPTIs(srchOpt))
+        for pti in ptiList:
+            Util.exe(PTIWrapper.markDeleteInstance(pti.getPolicyId()))
+
+        respObj.setSuccessRetCode()
+        return respObj
+    except respObjError as e:
+        return e.value
+
+##

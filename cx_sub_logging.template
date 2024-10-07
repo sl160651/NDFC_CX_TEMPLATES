@@ -1,0 +1,72 @@
+##template properties
+name =cx_sub_logging;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+@(IsInternal=true)
+boolean SUB_LOGGING_MONITOR;
+
+@(IsInternal=true)
+boolean SUB_LOGGING_CONSOLE;
+
+@(IsInternal=true)
+enum SUB_TIMESTAMP {
+    validValues=milliseconds,microseconds,seconds;
+    defaultValue=milliseconds;
+};
+
+@(IsInternal=true)
+string SUB_SOURCE_INTERFACE;
+
+@(IsInternal=true)
+string SUB_LOG_FILENAME;
+
+@(IsInternal=true)
+integer SUB_LOG_FILE_LOG_LEVEL{
+  min = 0;
+  max = 7;
+};
+
+@(IsInternal=true)
+integer SUB_LOG_FILE_SIZE{
+  defaultValue = 512000;
+  min = 4096;
+  max = 4194304;
+};
+
+@(IsInternal=true)
+integer SUB_LOGGING_MONITOR_LEVEL{
+  min = 0;
+  max = 7;
+};
+
+
+##
+##template content
+logging timestamp $$SUB_TIMESTAMP$$
+if ($$SUB_LOGGING_CONSOLE$$ == "true") {
+logging console 1
+}
+else {
+no logging console
+}
+if ($$SUB_LOGGING_MONITOR$$ == "true") {
+logging monitor $$SUB_LOGGING_MONITOR_LEVEL$$
+}
+else {
+no logging monitor
+}
+logging source-interface $$SUB_SOURCE_INTERFACE$$
+
+logging logfile $$SUB_LOG_FILENAME$$ $$SUB_LOG_FILE_LOG_LEVEL$$ size $$SUB_LOG_FILE_SIZE$$
+##

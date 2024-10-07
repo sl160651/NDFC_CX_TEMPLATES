@@ -1,0 +1,43 @@
+##template properties
+name =cx_snmp_user;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+@(DisplayName="Switch Username", Description="Switch user")
+string USERNAME;
+
+@(DisplayName="User Role", Description="User Role")
+string USER_ROLE;
+
+@(DisplayName="Algorithm for authentication", Description="Algorithm for authentication")
+enum AUTH_ALGO {
+  validValues=md5,sha,sha-224,sha-256,sha-384,sha-512;
+  defaultValue=md5;
+};
+
+@(DisplayName="SNMP Authentication Key", Description="SNMP Authentication Key")
+string AUTH{
+  minLength = 1;
+  maxLength = 256;
+};
+
+@(DisplayName="SNMP Priv Key", Description="SNMP Priv Key")
+string PRIV{
+  minLength = 1;
+  maxLength = 256;
+};
+
+##
+##template content
+snmp-server user $$USERNAME$$ $$USER_ROLE$$ auth $$AUTH_ALGO$$ $$AUTH$$ priv $$PRIV$$
+##

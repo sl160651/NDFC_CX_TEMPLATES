@@ -1,0 +1,24 @@
+##template properties
+name =cx_disable_source_routing;
+description = Disabling IP Source Routing;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2019 by Cisco Systems, Inc.
+#    All rights reserved.
+
+##
+##template content
+no ip source-route
+
+##

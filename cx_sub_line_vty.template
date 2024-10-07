@@ -1,0 +1,37 @@
+##template properties
+name =cx_sub_line_vty;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+@(IsInternal=true)
+integer SUB_SESSION_LIMIT;
+
+@(IsInternal=true)
+integer SUB_EXEC_TIMEOUT;
+
+@(IsInternal=true)
+string SUB_ACCESS_CLASS_IN;
+
+##
+##template content
+line vty
+  if ($$SUB_SESSION_LIMIT$$ != "") {
+  session-limit $$SUB_SESSION_LIMIT$$
+  }
+  if ($$SUB_EXEC_TIMEOUT$$ != "") {
+  exec-timeout $$SUB_EXEC_TIMEOUT$$
+  }
+  if ($$SUB_ACCESS_CLASS_IN$$ != "") {
+  access-class $$SUB_ACCESS_CLASS_IN$$ in 
+  }
+##

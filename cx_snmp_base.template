@@ -1,0 +1,38 @@
+##template properties
+name =cx_snmp_base;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+@(IsMandatory=True, DisplayName="SysLocation", Description="SysLocation")
+string LOCATION;
+
+@(IsMandatory=True, DisplayName="SysContact", Description="SysContact")
+string CONTACT;
+
+@(IsMandatory=True, DisplayName="Inform Source-Interface", Description="SNMP Inform notifications for which this source interface needs to be used, default mgmt0")
+string INFORM_SOURCE_INTERFACE {
+  defaultValue=mgmt0;
+};
+
+@(IsMandatory=True, DisplayName="Trap Source-Interface", Description="SNMP Trap notifications for which this source interface needs to be used, default mgmt0")
+string TRAP_SOURCE_INTERFACE {
+  defaultValue=mgmt0;
+};
+
+##
+##template content
+snmp-server location $$LOCATION$$
+snmp-server contact $$CONTACT$$
+snmp-server source-interface traps $$TRAP_SOURCE_INTERFACE$$
+snmp-server source-interface informs $$INFORM_SOURCE_INTERFACE$$
+##

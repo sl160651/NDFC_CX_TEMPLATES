@@ -1,0 +1,28 @@
+##template properties
+name =cx_ip_domain_name;
+description = IP Domain Name;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2020 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(DisplayName="IP Domain Name", Description="Domain name for the switch")
+string DOMAIN_NAME;
+
+##
+##template content
+
+ip domain-name $$DOMAIN_NAME$$
+
+##

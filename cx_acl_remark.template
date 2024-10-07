@@ -1,0 +1,47 @@
+##template properties
+name =cx_acl_remark;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2019-2022 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(DisplayName="ACL Name", Description="Name of Access Control List, e.g. acl_test")
+string ACL_NAME {
+    maxLength = 64;
+};
+
+@(DisplayName="Access list entry comment", Description="Access list entry comment")
+string REMARK {
+  maxLength = 100;
+};
+
+@(IsMandatory=false, DisplayName="IP Version", Description="IP version ip or ipv6")
+enum IP_VERSION {
+    validValues=ip,ipv6;
+    defaultValue=ip;
+};
+
+@(DisplayName="Sequence Number of remark", Description="Sequence number of access control entry, example 10")
+long SEQ_NUM {
+    min = 1;
+    max = 4294967295;
+    defaultValue=10;
+};
+##
+##template content
+$$IP_VERSION$$ access-list $$ACL_NAME$$
+  $$SEQ_NUM$$ remark $$REMARK$$
+##
+##

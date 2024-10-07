@@ -1,0 +1,165 @@
+##template properties
+name =cx_logging;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = PYTHON;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+@(IsMandatory=False, DisplayName="Set logging timestamp granularity", Description="Timestamp options: milliseconds, microseconds and seconds")
+enum TIMESTAMP {
+  validValues=milliseconds,microseconds,seconds;
+  defaultValue=milliseconds;
+};
+
+@(IsMandatory=False, DisplayName="Console logging", Description="Set console logging")
+boolean LOGGING_CONSOLE {
+  defaultValue=false;
+};
+
+@(IsMandatory=False, DisplayName="Monitor logging", Description="Set terminal monitor")
+boolean LOGGING_MONITOR {
+  defaultValue=false;
+};
+
+@(IsMandatory=False, IsMandatory="LOGGING_MONITOR==true", IsShow="LOGGING_MONITOR==true", DisplayName="Monitor logging Level", Description="0-emerg,1-alert,2-crit,3-err,4-warn,5-notif,6-inform,7-debug")
+integer LOGGING_MONITOR_LEVEL {
+  defaultValue = 6;
+  min = 0;
+  max = 7;
+};
+
+@(IsMandatory=False, DisplayName="Source-Interface", Description="Source-Interface for Remote Syslog Server, default mgmt0")
+string SOURCE_INTERFACE {
+  defaultValue=mgmt0;
+};
+
+@(IsMandatory=False, DisplayName="Logfile name", Section="Log to File", Description="Enter the logfile name, default messages")
+string LOG_FILENAME {
+  defaultValue=messages;
+  minLength = 1;
+  maxLength = 150;
+};
+
+@(IsMandatory=False, DisplayName="Logfile logging Level", Section="Log to File", Description="0-emerg,1-alert,2-crit,3-err,4-warn,5-notif,6-inform,7-debug")
+integer LOG_FILE_LOG_LEVEL {
+  defaultValue = 6;
+  min = 0;
+  max = 7;
+};
+
+@(IsMandatory=False, DisplayName="Logfile size in bytes", Section="Log to File", Description="Enter the logfile size in bytes")
+integer LOG_FILE_SIZE {
+  defaultValue = 512000;
+  min = 4096;
+  max = 4194304;
+};
+
+
+##
+##template content
+
+from com.cisco.dcbu.vinci.rest.services.jython import PTIWrapper
+from com.cisco.dcbu.vinci.rest.services.jython import WrappersResp
+from com.cisco.dcbu.vinci.rest.services.jython import FabricWrapper
+from com.cisco.dcbu.vinci.rest.services.jython import Helper
+from com.cisco.dcbu.pti.resource import CtrlPolicySearch
+from com.cisco.dcbu.vinci.rest.services.jython import InventoryWrapper
+
+from utility import *
+
+def add():
+    try:
+        Wrapper.print("======== cx_logging add [%s] ==========" % SERIAL_NUMBER)
+  
+        respObj = WrappersResp.getRespObj()
+        respObj.setSuccessRetCode()
+        
+        try:
+          SUB_TIMESTAMP = TIMESTAMP
+        except:
+          SUB_TIMESTAMP = "milliseconds"
+        
+        try:
+          SUB_LOGGING_CONSOLE = LOGGING_CONSOLE
+        except:
+          SUB_LOGGING_CONSOLE = "false"
+        
+        try:
+          SUB_LOGGING_MONITOR = LOGGING_MONITOR
+        except:
+          SUB_LOGGING_MONITOR = "false"
+        
+        try:
+          SUB_LOGGING_MONITOR_LEVEL = LOGGING_MONITOR_LEVEL
+        except:
+          SUB_LOGGING_MONITOR_LEVEL = "6"
+        
+        try:
+          SUB_SOURCE_INTERFACE = SOURCE_INTERFACE
+        except:
+          SUB_SOURCE_INTERFACE = "mgmt0"
+        
+        try:
+          SUB_LOG_FILENAME = LOG_FILENAME
+        except:
+          SUB_LOG_FILENAME = "messages"
+        
+        try:
+          SUB_LOG_FILE_LOG_LEVEL = LOG_FILE_LOG_LEVEL
+        except:
+          SUB_LOG_FILE_LOG_LEVEL = "6"
+        
+        try:
+          SUB_LOG_FILE_SIZE = LOG_FILE_SIZE
+        except:
+          SUB_LOG_FILE_SIZE = "512000"
+          
+        # errorMsg = ("SUB_LOG_FILE_SIZE [%s]" % (type(SUB_LOG_FILE_SIZE)))
+        # respObj.addErrorReport("INVALID_ASN", errorMsg)
+        # respObj.setFailureRetCode()
+        # return respObj
+        
+        delete()
+          
+        Util.exe(PTIWrapper.create(SERIAL_NUMBER, "SWITCH", "SWITCH", POLICY_ID,
+                                   "cx_sub_logging",
+                                   {"SUB_LOGGING_MONITOR": SUB_LOGGING_MONITOR,
+                                    "SUB_LOGGING_CONSOLE": SUB_LOGGING_CONSOLE,
+                                    "SUB_TIMESTAMP": SUB_TIMESTAMP,
+                                    "SUB_SOURCE_INTERFACE": SUB_SOURCE_INTERFACE,
+                                    "SUB_LOG_FILENAME": SUB_LOG_FILENAME,
+                                    "SUB_LOG_FILE_LOG_LEVEL": SUB_LOG_FILE_LOG_LEVEL,
+                                    "SUB_LOG_FILE_SIZE": SUB_LOG_FILE_SIZE,
+                                    "SUB_LOGGING_MONITOR_LEVEL": SUB_LOGGING_MONITOR_LEVEL
+                                   }))
+  
+        return respObj
+      
+    except respObjError as e:
+        return e.value
+
+def delete():
+    try:
+        Wrapper.print("======== cx_logging delete[%s] ==========" % SERIAL_NUMBER)
+
+        respObj = WrappersResp.getRespObj()
+        srchOpt = CtrlPolicySearch()
+        srchOpt.setSerialNumber(SERIAL_NUMBER)
+        srchOpt.setSource(POLICY_ID)
+        ptiList = Util.exe(PTIWrapper.getPTIs(srchOpt))
+        for pti in ptiList:
+            Util.exe(PTIWrapper.markDeleteInstance(pti.getPolicyId()))
+
+        respObj.setSuccessRetCode()
+        return respObj
+    except respObjError as e:
+        return e.value
+##

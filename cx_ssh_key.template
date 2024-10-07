@@ -1,0 +1,25 @@
+##template properties
+name =cx_ssh_key;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+@(IsMandatory=true, DisplayName="Enter number of bits", Description="Enter number of bits (1024-2048) in multiples of 8")
+long BITS {
+    min = 1024;
+    max = 2048;
+    defaultValue=2048;
+};
+##
+##template content
+ssh key rsa $$BITS$$ force
+##

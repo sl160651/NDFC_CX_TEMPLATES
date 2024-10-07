@@ -1,0 +1,101 @@
+##template properties
+name =cx_line_vty;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = PYTHON;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+@(IsMandatory=False, DisplayName="Session Limit", Description="Set the max no of concurrent vsh sessions.")
+integer SESSION_LIMIT {
+  min = 1;
+  max = 64;
+};
+
+@(IsMandatory=False, DisplayName="Exec timeout", Description="Enter timeout in minutes, 0 to disable")
+integer EXEC_TIMEOUT {
+  min = 0;
+  max = 525600;
+};
+
+@(IsMandatory=False, DisplayName="Inbound IPv4 Access control", Description="Name of the ACL")
+string ACCESS_CLASS_IN;
+
+##
+##template content
+from com.cisco.dcbu.vinci.rest.services.jython import PTIWrapper
+from com.cisco.dcbu.vinci.rest.services.jython import WrappersResp
+from com.cisco.dcbu.vinci.rest.services.jython import FabricWrapper
+from com.cisco.dcbu.vinci.rest.services.jython import Helper
+from com.cisco.dcbu.pti.resource import CtrlPolicySearch
+from com.cisco.dcbu.vinci.rest.services.jython import InventoryWrapper
+
+from utility import *
+
+def add():
+    try:
+        Wrapper.print("======== cx_line_vty add [%s] ==========" % SERIAL_NUMBER)
+
+        respObj = WrappersResp.getRespObj()
+        respObj.setSuccessRetCode()
+
+        
+        try:
+          SUB_EXEC_TIMEOUT = EXEC_TIMEOUT
+        except:
+          SUB_EXEC_TIMEOUT = ""
+
+        try:
+          SUB_SESSION_LIMIT = SESSION_LIMIT
+        except:
+          SUB_SESSION_LIMIT = ""
+        
+        try:
+          SUB_ACCESS_CLASS_IN = ACCESS_CLASS_IN
+        except:
+          SUB_ACCESS_CLASS_IN = ""
+        
+        if SUB_SESSION_LIMIT == "" and SUB_EXEC_TIMEOUT == "" and SUB_ACCESS_CLASS_IN == "":
+          # all the options cannot be empty 
+          errorMsg = ("All Options are Empty")
+          respObj.addErrorReport("All_Options_Empty", errorMsg)
+          respObj.setFailureRetCode()
+          return respObj
+        
+        delete()
+        
+        Util.exe(PTIWrapper.create(SERIAL_NUMBER, "SWITCH", "SWITCH", POLICY_ID,
+                                   "cx_sub_line_vty",
+                                   {"SUB_EXEC_TIMEOUT": SUB_EXEC_TIMEOUT,
+                                    "SUB_SESSION_LIMIT": SUB_SESSION_LIMIT,
+                                    "SUB_ACCESS_CLASS_IN": SUB_ACCESS_CLASS_IN
+                                    }))
+        return respObj
+    except respObjError as e:
+      return e.value
+
+def delete():
+    try:
+        Wrapper.print("======== cx_line_vty delete[%s] ==========" % SERIAL_NUMBER)
+
+        respObj = WrappersResp.getRespObj()
+        srchOpt = CtrlPolicySearch()
+        srchOpt.setSerialNumber(SERIAL_NUMBER)
+        srchOpt.setSource(POLICY_ID)
+        ptiList = Util.exe(PTIWrapper.getPTIs(srchOpt))
+        for pti in ptiList:
+            Util.exe(PTIWrapper.markDeleteInstance(pti.getPolicyId()))
+
+        respObj.setSuccessRetCode()
+        return respObj
+    except respObjError as e:
+        return e.value
+##

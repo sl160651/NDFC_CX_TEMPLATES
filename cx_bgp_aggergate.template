@@ -32,7 +32,7 @@ boolean SUM;
 ##
 ##template content
 
-if SUM == true {
+if ($$SUM$$ == "true") {
 
 router bgp $$BGP_ASN$$
   address-family ipv4 unicast
@@ -44,6 +44,4 @@ router bgp $$BGP_ASN$$
   address-family ipv4 unicast
     aggregate $$IP_PRE$$ 
 }
-
-
 ##

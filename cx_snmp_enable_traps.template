@@ -1,0 +1,195 @@
+##template properties
+name =cx_snmp_enable_traps;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+@(IsMandatory=True, DisplayName="Enable SNMP BGP traps", Description="Enable SNMP BGP traps")
+boolean BGP {
+  defaultValue=true;
+};
+@(IsMandatory=True, DisplayName="Enable SNMP OSPF traps", Description="Enable SNMP OSPF traps")
+boolean OSPF {
+  defaultValue=true;
+};
+@(IsMandatory=True, DisplayName="Enable Callhome External Event Notification", Description="Enable Callhome External Event Notification")
+boolean CALLHOME_EVENT {
+  defaultValue=true;
+};
+@(IsMandatory=True, DisplayName="Enable Callhome SMTP Message Send Fail notification", Description="Enable SMTP Message Send Fail notification")
+boolean CALLHOME_SMTP {
+  defaultValue=true;
+};
+@(IsMandatory=True, DisplayName="Enable cfs State change notification", Description="Enable cfs State change notification")
+boolean CFS_STATE {
+  defaultValue=true;
+};
+@(IsMandatory=True, DisplayName="Enable cfs Merge failure notification", Description="Enable cfs Merge failure notification")
+boolean CFS_MERGE {
+  defaultValue=true;
+};
+@(IsMandatory=True, DisplayName="Enable Lldp remote table change trap", Description="Enable Lldp remote table change trap")
+boolean LLDP {
+  defaultValue=true;
+};
+@(IsMandatory=True, DisplayName="Enable AAA server state change notification", Description="Enable AAA server state change notification")
+boolean AAA {
+  defaultValue=true;
+};
+@(IsMandatory=True, DisplayName="Enable Feature operation status change notification", Description="Enable Feature operation status change notification")
+boolean FEATURE_CHANGE {
+  defaultValue=true;
+};
+@(IsMandatory=True, DisplayName="Enable Sysmgr Software Core Notification", Description="Enable Sysmgr Software Core Notification")
+boolean SYSMGR_CORE {
+  defaultValue=true;
+};
+@(IsMandatory=True, DisplayName="Enable Running config change trap", Description="Enable Running config change trap")
+boolean RUN_CONFIG {
+  defaultValue=true;
+};
+@(IsMandatory=True, DisplayName="Enable SNMP authentication trap", Description="Enable SNMP authentication trap")
+boolean SNMP_AUTH {
+  defaultValue=true;
+};
+@(IsMandatory=True, DisplayName="Enable Cisco interface transceiver monitor status change notification", Description="Cisco interface transceiver monitor status change notification")
+boolean CISCO_XCVR {
+  defaultValue=true;
+};
+@(IsMandatory=True, DisplayName="Enable VTP Changes", Description="Enable vtpConfigRevNumberError vtpConfigDigestError vtpServerDisabled vtpVersionOneDeviceDetected vlanTrunkPortDynamicStatusChange vtpLocalModeChanged vtpVersionInUseChanged notification")
+boolean VTP_NOTIFS {
+  defaultValue=true;
+};
+@(IsMandatory=True, DisplayName="Enable vtpVlanCreated notification", Description="Enable vtpVlanCreated notification")
+boolean VTP_VLAN_CREATE {
+  defaultValue=true;
+};
+@(IsMandatory=True, DisplayName="Enable vtpVlanDeleted notification", Description="Enable vtpVlanDeleted notification")
+boolean VTP_VLAN_DELETE {
+  defaultValue=true;
+};
+@(IsMandatory=True, DisplayName="Enable SNMP STP Bridge MIB newroot traps", Description="Enable SNMP STP Bridge MIB newroot traps")
+boolean BRIDGE_NEWROOT {
+  defaultValue=true;
+};
+@(IsMandatory=True, DisplayName="Enable SNMP STP Bridge MIB topologychange traps", Description="Enable SNMP STP Bridge MIB topologychange traps")
+boolean BRIDGE_TOP_CHANGE {
+  defaultValue=true;
+};
+
+@(IsMandatory=True, DisplayName="Enable SNMP STPX MIB InconsistencyUpdate traps", Description="Enable SNMP STPX MIB InconsistencyUpdate traps")
+boolean STP_INCONSISTENCY {
+  defaultValue=true;
+};
+@(IsMandatory=True, DisplayName="Enable SNMP STPX MIB LoopInconsistencyUpdate traps", Description="Enable SNMP STPX MIB LoopInconsistencyUpdate traps")
+boolean STP_LOOP {
+  defaultValue=true;
+};
+@(IsMandatory=True, DisplayName="Enable SNMP STPX MIB RootInconsistencyUpdate traps", Description="Enable SNMP STPX MIB RootInconsistencyUpdate traps")
+boolean STP_ROOT {
+  defaultValue=true;
+};
+@(IsMandatory=True, DisplayName="Enable Clock change notification", Description="Enable Clock change notification")
+boolean CLOCK {
+  defaultValue=true;
+};
+@(IsMandatory=True, DisplayName="Enable Feature operation status change notification", Description="Enable Feature operation status change notification")
+boolean FEATURE_CISCO {
+  defaultValue=true;
+};
+@(IsMandatory=True, DisplayName="Enable Maint Mode Change Notification", Description="Enable Maint Mode Change Notification")
+boolean MMODE_MAINT {
+  defaultValue=true;
+};
+@(IsMandatory=True, DisplayName="Enable Normal Mode Change Notification", Description="Enable Normal Mode Change Notification")
+boolean MMODE_NORMAL {
+  defaultValue=true;
+};
+
+##
+##template content
+if ($$BGP$$ == "true") {
+snmp-server enable traps bgp
+}
+if ($$OSPF$$ == "true") {
+snmp-server enable traps ospf
+}
+if ($$CALLHOME_EVENT$$ == "true") {
+snmp-server enable traps callhome event-notify
+}
+if ($$CALLHOME_SMTP$$ == "true") {
+snmp-server enable traps callhome smtp-send-fail
+}
+if ($$CFS_STATE$$ == "true") {
+snmp-server enable traps cfs state-change-notif
+}
+if ($$CFS_STATE$$ == "true") {
+snmp-server enable traps cfs merge-failure
+}
+if ($$LLDP$$ == "true") {
+snmp-server enable traps lldp lldpRemTablesChange
+}
+if ($$AAA$$ == "true") {
+snmp-server enable traps aaa server-state-change
+}
+if ($$FEATURE_CHANGE$$ == "true") {
+snmp-server enable traps feature-control FeatureOpStatusChange
+}
+if ($$SYSMGR_CORE$$ == "true") {
+snmp-server enable traps sysmgr cseFailSwCoreNotifyExtended
+}
+if ($$RUN_CONFIG$$ == "true") {
+snmp-server enable traps config ccmCLIRunningConfigChanged
+}
+if ($$SNMP_AUTH$$ == "true") {
+snmp-server enable traps snmp authentication
+}
+if ($$CISCO_XCVR$$ == "true") {
+snmp-server enable traps link cisco-xcvr-mon-status-chg
+}
+if ($$VTP_NOTIFS$$ == "true") {
+snmp-server enable traps vtp notifs
+}
+if ($$VTP_VLAN_CREATE$$ == "true") {
+snmp-server enable traps vtp vlancreate
+}
+if ($$VTP_VLAN_DELETE$$ == "true") {
+snmp-server enable traps vtp vlandelete
+}
+if ($$BRIDGE_NEWROOT$$ == "true") {
+snmp-server enable traps bridge newroot
+}
+if ($$BRIDGE_TOP_CHANGE$$ == "true") {
+snmp-server enable traps bridge topologychange
+}
+if ($$STP_INCONSISTENCY$$ == "true") {
+snmp-server enable traps stpx inconsistency
+}
+if ($$STP_LOOP$$ == "true") {
+snmp-server enable traps stpx root-inconsistency
+}
+if ($$STP_ROOT$$ == "true") {
+snmp-server enable traps stpx loop-inconsistency
+}
+if ($$CLOCK$$ == "true") {
+snmp-server enable traps system Clock-change-notification
+}
+if ($$FEATURE_CISCO$$ == "true") {
+snmp-server enable traps feature-control ciscoFeatOpStatusChange
+}
+if ($$MMODE_MAINT$$ == "true") {
+snmp-server enable traps mmode cseNormalModeChangeNotify
+}
+if ($$MMODE_NORMAL$$ == "true") {
+snmp-server enable traps mmode cseMaintModeChangeNotify
+}
+##

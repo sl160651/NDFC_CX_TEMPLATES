@@ -1,0 +1,24 @@
+##template properties
+name =cx_no_ip_domain_lookup;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2019 by Cisco Systems, Inc.
+#    All rights reserved.
+
+##
+##template content
+no ip domain-lookup
+
+##

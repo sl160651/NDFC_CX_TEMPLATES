@@ -1,0 +1,47 @@
+##template properties
+name =cx_tacacs_config;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+@(IsMandatory=True, DisplayName="Source-Interface", Description="Source interface to be used to reach tacacs server, default mgmt0")
+string SOURCE_INTERFACE {
+  defaultValue=mgmt0;
+};
+
+@(IsMandatory=True, DisplayName="Direct-Request", Description="Enable direct authentication requests to server")
+boolean DIRECT_REQUEST {
+  defaultValue=true;
+};
+
+@(IsMandatory=True, DisplayName="timeout", Description="Global TACACS+ server timeout period in seconds")
+integer TIMEOUT {
+  defaultValue = 3;
+  min = 1;
+  max = 60;
+};
+
+##
+##template content
+
+ip tacacs source-interface $$SOURCE_INTERFACE$$
+
+if ($$DIRECT_REQUEST$$ == "true") {
+tacacs-server directed-request
+}
+
+tacacs-server timeout $$TIMEOUT$$
+
+
+
+  
+##

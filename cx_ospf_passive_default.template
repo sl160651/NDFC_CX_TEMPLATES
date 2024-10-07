@@ -1,0 +1,32 @@
+##template properties
+name =cx_ospf_passive_default;
+description = set passive interface default;
+tags = ;
+userDefined = true;
+supportedPlatforms = N9K;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2018 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(DisplayName="OSPF Process Tag", Description="OSPF routing process tag")
+string OSPF_TAG {
+  minLength = 1;
+  maxLength = 20;
+};
+
+##
+##template content
+
+router ospf $$OSPF_TAG$$
+  passive-interface default
+
+##

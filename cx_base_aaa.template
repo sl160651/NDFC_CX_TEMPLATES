@@ -65,7 +65,7 @@ aaa authentication login console fallback error local
 if ($$AUTHORIZATION$$ == "true") {
 aaa authorization config-commands default group $$AAA_GROUP$$ local
 aaa authorization commands default group $$AAA_GROUP$$ local
-aaa authorization config-commands console group $$AAA_GROUP$$ local $$WITHIN$$
+aaa authorization config-commands console group $$AAA_GROUP$$ local
 aaa authorization commands console group $$AAA_GROUP$$ local
 }
 

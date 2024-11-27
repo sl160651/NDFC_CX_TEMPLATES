@@ -1,0 +1,23 @@
+##template properties
+name =cx_feature_hsrp;
+description = Enables HSRP feature;
+tags = ;
+userDefined = true;
+supportedPlatforms = N9K;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2020 by Cisco Systems, Inc.
+#    All rights reserved.
+
+##
+##template content
+feature hsrp
+##

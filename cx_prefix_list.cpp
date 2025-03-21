@@ -1,0 +1,52 @@
+##template variables
+
+#    Copyright (c) 2022 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(IsMandatory=true, DisplayName="Name of the prefix list")
+string PFX_LIST_NAME{
+    maxLength = 63;
+};
+
+@(DisplayName="Prefix List Sequence Number", Description="Prefix List sequence number, example 10")
+integer SEQ_NUM {
+    min = 0;
+    max = 65535;
+    defaultValue=10;
+};
+
+@(IsMandatory=true, DisplayName="IP Prefix")
+ipAddressWithoutPrefix IP_PREFIX;
+
+@(IsMandatory=true, DisplayName="Mask")
+integer MASK{
+    min = 0;
+    max = 32;
+};
+
+@(DisplayName="Action", Description="permit or deny operation")
+enum ACTION {
+    validValues=permit,deny;
+    defaultValue=permit;
+};
+
+@(IsMandatory=false, DisplayName="Match Operator", Description="Prefix match criteria, for example eq,le,ge or mask")
+enum OP{
+    validValues = eq,ge,le,mask;
+};
+
+@(IsMandatory=false, DisplayName="Mask Length", Description="only required when defining start and end mask lengths")
+integer LEN{
+    min = 0;
+};
+
+##
+##template content
+
+if ($$OP$$ != "") {
+ip prefix-list $$PFX_LIST_NAME$$ seq $$SEQ_NUM$$ $$ACTION$$ $$IP_PREFIX$$/$$MASK$$ $$OP$$ $$LEN$$
+}
+else {
+ip prefix-list $$PFX_LIST_NAME$$ seq $$SEQ_NUM$$ $$ACTION$$ $$IP_PREFIX$$/$$MASK$$
+}
+##

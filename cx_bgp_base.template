@@ -1,0 +1,127 @@
+##template properties
+name =cx_bgp_base;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = PYTHON;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+@(IsMandatory=false, DisplayName="BGP Router-id", Description="BGP Router identifier")
+ipV4Address ROUTER_ID;
+
+@(IsMandatory=false, DisplayName="Enable as-path multipath-relax", Description="Relax AS-Path restriction when choosing multipaths")
+boolean AS_PATH_MULTIPATH_RELAX {
+  defaultValue=false;
+};
+
+@(IsMandatory=false, DisplayName="Enable BGP PIC Edge", Description="Enable BGP Prefix Independent Convergence edge")
+boolean BGP_PIC_EDGE {
+  defaultValue=false;
+};
+
+##
+##template content
+from com.cisco.dcbu.vinci.rest.services.jython import PTIWrapper
+from com.cisco.dcbu.vinci.rest.services.jython import WrappersResp
+from com.cisco.dcbu.vinci.rest.services.jython import FabricWrapper
+from com.cisco.dcbu.vinci.rest.services.jython import Helper
+from com.cisco.dcbu.pti.resource import CtrlPolicySearch
+from com.cisco.dcbu.vinci.rest.services.jython import InventoryWrapper
+
+from utility import *
+
+def add():
+    try:
+        Wrapper.print("======== cx_bgp_base add [%s] ==========" % SERIAL_NUMBER)
+  
+        respObj = WrappersResp.getRespObj()
+        respObj.setSuccessRetCode()
+  
+  
+        #get fabricName 
+        invResp = InventoryWrapper.getFabricNameForSwitch(SERIAL_NUMBER)
+        if invResp.isRetCodeSuccess():
+            fabricName = invResp.getValue()
+        else:
+            respObj.setFailureRetCode()
+            return respObj
+  
+        # Get fabric ASN 
+        fabricAsn = None
+        helperResp = Helper.getFabricAsn(fabricName)
+        if helperResp.isRetCodeSuccess():
+            fabricAsn = helperResp.getValue()
+        else:
+            Wrapper.print("Invalid ASN for Fabric %s" %(fabricName))
+            return helperResp
+  
+        if ((fabricAsn == None) or (fabricAsn == "")):
+            # we still have an invalid ASN
+            errorMsg = ("Could not determine the BGP ASN for fabric [%s]" % (fabricName))
+            respObj.addErrorReport("INVALID_ASN", errorMsg)
+            respObj.setFailureRetCode()
+            return respObj
+        
+        try:
+          sub_router_id = ROUTER_ID
+        except:
+          sub_router_id = ""
+  
+        try:
+          sub_as_path_multipath_relax = AS_PATH_MULTIPATH_RELAX
+        except:
+          sub_as_path_multipath_relax = "false"
+          
+        try:
+          sub_bgp_pic_edge = BGP_PIC_EDGE
+        except:
+          sub_bgp_pic_edge = "false"
+          
+        
+        # check if there is anything that needs to be configured.
+        
+        if ((sub_router_id == "") and (sub_as_path_multipath_relax == "false") and (sub_bgp_pic_edge == "false")):
+            errorMsg = ("There is nothing to configure. Please select at least one option.")
+            respObj.addErrorReport("INVALID_ASN", errorMsg)
+            respObj.setFailureRetCode()
+            return respObj
+        
+        delete()
+        
+        Util.exe(PTIWrapper.create(SERIAL_NUMBER, "SWITCH", "SWITCH", POLICY_ID,
+                                   "cx_sub_bgp_base",
+                                   {"SUB_BGP_AS": fabricAsn,
+                                   "SUB_ROUTER_ID": sub_router_id,
+                                   "SUB_AS_PATH_MULTIPATH_RELAX": sub_as_path_multipath_relax,
+                                   "SUB_BGP_PIC_EDGE": sub_bgp_pic_edge
+                                   }))
+        
+        
+        return respObj
+    except respObjError as e:
+        return e.value
+
+def delete():
+    try:
+        Wrapper.print("======== cx_bgp_base delete[%s] ==========" % SERIAL_NUMBER)
+
+        respObj = WrappersResp.getRespObj()
+        srchOpt = CtrlPolicySearch()
+        srchOpt.setSerialNumber(SERIAL_NUMBER)
+        srchOpt.setSource(POLICY_ID)
+        ptiList = Util.exe(PTIWrapper.getPTIs(srchOpt))
+        for pti in ptiList:
+            Util.exe(PTIWrapper.markDeleteInstance(pti.getPolicyId()))
+
+        respObj.setSuccessRetCode()
+        return respObj
+    except respObjError as e:
+        return e.value
+##

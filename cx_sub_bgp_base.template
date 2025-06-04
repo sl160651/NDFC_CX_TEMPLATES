@@ -1,0 +1,40 @@
+##template properties
+name =cx_sub_bgp_base;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+@(IsInternal=true)
+string SUB_BGP_AS;
+
+@(IsInternal=true)
+ipV4Address SUB_ROUTER_ID;
+
+@(IsInternal=true)
+boolean SUB_AS_PATH_MULTIPATH_RELAX;
+
+@(IsInternal=true)
+boolean SUB_BGP_PIC_EDGE;
+##
+##template content
+router bgp $$SUB_BGP_AS$$
+  if ($$SUB_ROUTER_ID$$ != "") {
+  router-id $$SUB_ROUTER_ID$$
+  }
+  if ($$SUB_AS_PATH_MULTIPATH_RELAX$$ == "true") {
+  bestpath as-path multipath-relax
+  }
+  if ($$SUB_BGP_PIC_EDGE$$ == "true") {
+  address-family ipv4 unicast
+    additional-paths install backup
+  }
+##

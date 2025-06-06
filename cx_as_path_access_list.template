@@ -45,6 +45,6 @@ string LIST {
 ##
 ##template content
 
-ip as-path access-list $$NAME$$ seq $$SEQ$$ $$ACTION$$ $$LIST$$
+ip as-path access-list $$NAME$$ seq $$SEQ$$ $$ACTION$$ "$$LIST$$"
 
 ##

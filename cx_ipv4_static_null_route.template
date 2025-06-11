@@ -1,0 +1,36 @@
+##template properties
+name =cx_ipv4_static_null_route;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2021 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(IsMandatory=true, Description="IP address with mask (e.g. 192.168.10.1/24)", DisplayName="IP Address/Mask")
+ipV4AddressWithSubnet IP_MASK;
+
+@(Description="Administrative distance", DisplayName="Administrative distance. The range is from 1 through 255. The default is 1.")
+integer AD{
+  min = 1;
+  max = 255;
+  defaultValue = 1;
+};
+
+##
+##template content
+
+ip route $$IP_MASK$$ Null0 $$AD$$
+
+##
+

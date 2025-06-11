@@ -1,0 +1,91 @@
+##template properties
+name =cx_mvpn_bgp_neighbor;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = PYTHON;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+@(DisplayName="BGP Neighbor IP", Description="IP address of BGP neighbor")
+ipAddress BGP_NEIGHBOR_IP;
+
+##
+##template content
+from com.cisco.dcbu.vinci.rest.services.jython import PTIWrapper
+from com.cisco.dcbu.vinci.rest.services.jython import WrappersResp
+from com.cisco.dcbu.vinci.rest.services.jython import FabricWrapper
+from com.cisco.dcbu.vinci.rest.services.jython import Helper
+from com.cisco.dcbu.pti.resource import CtrlPolicySearch
+from com.cisco.dcbu.vinci.rest.services.jython import InventoryWrapper
+
+from utility import *
+
+def add():
+    try:
+        Wrapper.print("======== cx_mvpn_bgp_neighbor add [%s] ==========" % SERIAL_NUMBER)
+  
+        respObj = WrappersResp.getRespObj()
+
+        #get fabricName 
+        invResp = InventoryWrapper.getFabricNameForSwitch(SERIAL_NUMBER)
+        if invResp.isRetCodeSuccess():
+            fabricName = invResp.getValue()
+        else:
+            respObj.setFailureRetCode()
+            return respObj
+  
+        # Get fabric ASN 
+        fabricAsn = None
+        helperResp = Helper.getFabricAsn(fabricName)
+        if helperResp.isRetCodeSuccess():
+            fabricAsn = helperResp.getValue()
+        else:
+            Wrapper.print("Invalid ASN for Fabric %s" %(fabricName))
+            return helperResp
+  
+        if ((fabricAsn == None) or (fabricAsn == "")):
+            # we still have an invalid ASN
+            errorMsg = ("Could not determine the BGP ASN for fabric [%s]" % (fabricName))
+            respObj.addErrorReport("INVALID_ASN", errorMsg)
+            respObj.setFailureRetCode()
+            return respObj
+
+        delete()
+        
+        Util.exe(PTIWrapper.create(SERIAL_NUMBER, "SWITCH", "SWITCH", POLICY_ID,
+                                   "cx_sub_mvpn_bgp_neighbor",
+                                   {"BGP_AS": fabricAsn,
+                                   "BGP_NEIGHBOR_IP": BGP_NEIGHBOR_IP
+                                   }))
+
+        respObj.setSuccessRetCode()
+        return respObj
+    except respObjError as e:
+        return e.value
+
+def delete():
+    try:
+        Wrapper.print("======== cx_mvpn_bgp_neighbor delete[%s] ==========" % SERIAL_NUMBER)
+
+        respObj = WrappersResp.getRespObj()
+        srchOpt = CtrlPolicySearch()
+        srchOpt.setSerialNumber(SERIAL_NUMBER)
+        srchOpt.setSource(POLICY_ID)
+        ptiList = Util.exe(PTIWrapper.getPTIs(srchOpt))
+        for pti in ptiList:
+            Util.exe(PTIWrapper.markDeleteInstance(pti.getPolicyId()))
+
+        respObj.setSuccessRetCode()
+        return respObj
+    except respObjError as e:
+        return e.value
+  
+##

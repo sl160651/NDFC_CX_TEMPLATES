@@ -1,0 +1,46 @@
+##template properties
+name =cx_sub_mvpn_bgp_rs;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+@(IsInternal=true)
+string SUB_BGP_AS;
+
+@(IsInternal=true)
+string SUB_TEMPLATE_NAME;
+
+@(IsInternal=true)
+boolean SUB_SEND_COM_BOTH;
+
+@(IsInternal=true)
+string SUB_ROUTE_MAP_OUT;
+
+@(IsInternal=true)
+string SUB_ROUTE_MAP_IN;
+##
+##template content
+router bgp $$SUB_BGP_AS$$
+  template peer $$SUB_TEMPLATE_NAME$$
+    address-family ipv4 mvpn
+      if ($$SUB_SEND_COM_BOTH$$ == "true") {
+      send-community
+      send-community extended
+      }
+      rewrite-rt-asn
+      if ($$SUB_ROUTE_MAP_OUT$$ != "") {
+      route-map $$SUB_ROUTE_MAP_OUT$$ out
+      }
+      if ($$SUB_ROUTE_MAP_IN$$ != "") {
+      route-map $$SUB_ROUTE_MAP_IN$$ in
+      }
+##

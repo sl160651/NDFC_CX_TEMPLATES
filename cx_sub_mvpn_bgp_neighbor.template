@@ -1,0 +1,28 @@
+##template properties
+name =cx_sub_mvpn_bgp_neighbor;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+@(DisplayName="BGP AS #", Description="BGP Autonomous System number")
+string BGP_AS;
+
+@(DisplayName="BGP Neighbor IP", Description="IP address of BGP neighbor")
+ipAddress BGP_NEIGHBOR_IP;
+##
+##template content
+router bgp $$BGP_AS$$
+  neighbor $$BGP_NEIGHBOR_IP$$
+    address-family ipv4 mvpn
+      send-community both
+      rewrite-rt-asn
+##

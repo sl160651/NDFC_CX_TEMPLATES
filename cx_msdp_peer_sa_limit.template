@@ -1,0 +1,27 @@
+##template properties
+name =cx_msdp_peer_sa_limit;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+@(DisplayName="Peer IP Address", Description="IP address of the MSDP Peer")
+ipV4Address PEER_IP;
+
+@(DisplayName="SA-Limit", Description="Maximum (S,G) entries allowed")
+long SA_LIMIT {
+  min = 0;
+  max = 4294967295;
+};
+##
+##template content
+ip msdp sa-limit $$PEER_IP$$ $$SA_LIMIT$$
+##

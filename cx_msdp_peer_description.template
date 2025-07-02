@@ -26,5 +26,5 @@ string PEER_DESC;
 
 ##
 ##template content
-ip msdp peer description $$PEER_IP$$ $$PEER_DESC$$
+ip msdp description $$PEER_IP$$ $$PEER_DESC$$
 ##

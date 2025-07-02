@@ -1,0 +1,194 @@
+##template properties
+name =cx_int_loopback;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = PYTHON;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+@(IsInternal=true)
+interface intf_name;
+
+@(DisplayName="Loopback ID", Description="Admin state of the interface")
+integer LOOPBACKID {
+  min = 0;
+  max = 1023;
+};
+@(IsMandatory=false, DisplayName="Interface VRF", IsInstance=true, Description="Interface VRF name, default VRF if not specified")
+string INTF_VRF {
+  minLength = 1;
+  maxLength = 32;
+};
+
+@(IsMandatory=false, DisplayName="Loopback IP", IsInstance=true, Description="For VxLAN fabrics, configure an IPv4 address if underlay is V4 and VRF is default, otherwise add the config to freeform if underlay is V6.  For non-VxLAN fabrics or non-default VRF, loopback interfaces can have both IPv4 and IPv6 addresses.")
+ipV4Address LOOPBACK_IP;
+
+@(IsMandatory=false, DisplayName="Loopback IPv6 Address", IsInstance=true, Description="For VxLAN fabrics, configure an IPv6 address if underlay is V6 and VRF is default, otherwise add the config to freeform if underlay is V4.  For non-VxLAN fabrics or non-default VRF, loopback interfaces can have both IPv4 and IPv6 addresses.")
+ipV6Address LOOPBACK_IPV6;
+
+@(IsMandatory=false, DisplayName="Route-Map TAG", Description="Route-Map tag associated with interface IP")
+string ROUTE_MAP_TAG {
+  defaultValue=12345;
+};
+
+@(IsMandatory=false, DisplayName="Interface Description", IsInstance=true, Description="Add description to the interface (Max Size 254)")
+string DESC {
+  minLength = 1;
+  maxLength = 254;
+};
+
+@(IsMandatory=false, IsMultiLineString=true, DisplayName="Freeform Config", IsInstance=true, Description="Additional CLI for the interface")
+string CONF;
+
+@(IsMandatory=false, DisplayName="Enable Interface", Description="Uncheck to disable the interface")
+boolean ADMIN_STATE {
+defaultValue=true;
+};
+
+@(IsMandatory=false, DisplayName="Source", Description="Source of the PTI", IsInternal=true)
+string SOURCE;
+
+@(IsInternal=true)
+string POLICY_ID;
+
+
+##
+##template content
+from com.cisco.dcbu.vinci.rest.services.jython import PTIWrapper
+from com.cisco.dcbu.vinci.rest.services.jython import WrappersResp
+from com.cisco.dcbu.vinci.rest.services.jython import FabricWrapper
+from com.cisco.dcbu.vinci.rest.services.jython import Helper
+from com.cisco.dcbu.pti.resource import CtrlPolicySearch
+from com.cisco.dcbu.vinci.rest.services.jython import InventoryWrapper
+
+from utility import *
+
+
+def add():
+    try:
+        # Wrapper.print("==========cx_int_loopbacl - add==========")
+    
+        utilObj = Util()
+        respObj = WrappersResp.getRespObj()
+        respObj.setSuccessRetCode()
+        intf_name = "loopback"+str(LOOPBACKID)
+
+        conf = ""
+        if CONF != "":
+            respObj, conf = Util.adjustIntfFreeformConfig(SERIAL_NUMBER, intf_name, CONF)
+            if respObj.isRetCodeFailure():
+                return respObj
+        try:
+          intf_vrf = INTF_VRF
+        except:
+          intf_vrf = "" 
+        
+        try:
+          route_map_tag = ROUTE_MAP_TAG
+        except:
+          route_map_tag = "12345"
+
+        try:
+          desc = DESC
+        except:
+          desc = ""
+        
+        try:
+          admin_state = ADMIN_STATE
+        except:
+          admin_state = "true"
+
+        try:
+            loopback_ipv6 = LOOPBACK_IPV6
+        except:
+            loopback_ipv6 = ""
+            
+        try:
+            loopback_ip = LOOPBACK_IP
+        except:
+            loopback_ip = ""
+        
+
+        SOURCE = POLICY_ID
+        
+        # delete()
+      
+        utilObj.exeVal(PTIWrapper.createOrUpdate(SERIAL_NUMBER, "INTERFACE",
+                                                intf_name, SOURCE,
+                                                500,
+                                                "cx_sub_int_loopback",
+                                                {"INTF_NAME": intf_name,
+                                                  "CONF": conf, 
+                                                  "SOURCE": SOURCE,
+                                                  "INTF_VRF": intf_vrf,
+                                                  "DESC": desc,
+                                                  "ADMIN_STATE": admin_state,
+                                                  "LOOPBACK_IP": loopback_ip,
+                                                  "LOOPBACK_IPV6": loopback_ipv6,
+                                                  "ROUTE_MAP_TAG": route_map_tag
+                                                }))
+
+        return respObj
+
+
+    except respObjError as e:
+        return e.value
+
+
+
+def delete():
+    try:
+        intf_name = "loopback"+str(LOOPBACKID)
+        SOURCE = POLICY_ID
+
+
+        # ptiList = Util.exe(PTIWrapper.get(SERIAL_NUMBER, "INTERFACE", intf_name, intf_name))
+        # ipTemplateList = ["loopback_interface_with_tag", "loopback_interface", "interface_ipv6_tag_11_1", "interface_ipv6_11_1"]
+        # for pti in ptiList:
+        #     if pti.getTemplateName() in ipTemplateList:
+        #         Util.exe(PTIWrapper.markDeleteInstance(pti.getPolicyId()))
+        #     else:
+        #         Util.exe(PTIWrapper.deleteInstance(pti.getPolicyId()))
+            
+        # ptiList = Util.exe(PTIWrapper.get(SERIAL_NUMBER, "INTERFACE", intf_name, intf_name))
+        # if ptiList:
+        #     Util.exe(PTIWrapper.markDelete(SERIAL_NUMBER, "INTERFACE", intf_name, intf_name))
+
+        # ptiList = Util.exe(PTIWrapper.get(SERIAL_NUMBER, "INTERFACE", intf_name, intf_name))
+        # for pti in ptiList:
+        #     Util.exe(PTIWrapper.markDeleteInstance(pti.getPolicyId()))
+
+
+
+
+        
+        wrappersResp = PTIWrapper.get(SERIAL_NUMBER, SOURCE)
+        if wrappersResp.isRetCodeSuccess():
+            ctrlPolicies = wrappersResp.getValue()
+            for policy in ctrlPolicies:
+                PTIWrapper.markDeleteInstance(policy.getPolicyId())
+    
+        # ptiList = Util.exe(PTIWrapper.get(SERIAL_NUMBER, source))
+        # if ptiList:
+        #     for pti in ptiList:
+        #         if pti.getTemplateContentType() == "PYTHON":
+        #             PTIWrapper.deleteInstance(pti.getPolicyId())
+        #         else:
+        #             PTIWrapper.markDeleteInstance(pti.getPolicyId())
+
+
+            
+        respObj = WrappersResp.getRespObj()
+        respObj.setSuccessRetCode()
+        return respObj
+    except respObjError as e:
+        return e.value
+
+##

@@ -1,0 +1,159 @@
+##template properties
+name =cx_sub_int_loopback;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = PYTHON;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+@(IsInternal=true)
+string CONF;
+
+@(PrimaryAssociation=true, IsInternal=true)
+interface INTF_NAME;
+
+@(IsInternal=true)
+string SOURCE;
+
+@(IsInternal=true)
+string INTF_VRF {
+  minLength = 1;
+  maxLength = 32;
+};
+
+@(IsInternal=true)
+string DESC {
+  minLength = 1;
+  maxLength = 254;
+};
+
+@(IsInternal=true)
+boolean ADMIN_STATE;
+
+@(IsInternal=true)
+ipV4Address LOOPBACK_IP;
+
+@(IsInternal=true)
+ipV6Address LOOPBACK_IPV6;
+
+@(IsInternal=true)
+string ROUTE_MAP_TAG;
+
+##
+##template content
+from com.cisco.dcbu.vinci.rest.services.jython import PTIWrapper
+from com.cisco.dcbu.vinci.rest.services.jython import WrappersResp
+from com.cisco.dcbu.vinci.rest.services.jython import FabricWrapper
+from com.cisco.dcbu.vinci.rest.services.jython import Helper
+from com.cisco.dcbu.pti.resource import CtrlPolicySearch
+from com.cisco.dcbu.vinci.rest.services.jython import InventoryWrapper
+
+from utility import *
+
+def add():
+    try:
+        respObj = WrappersResp.getRespObj()
+        utilObj = Util()
+
+        delete()
+
+        Util.exe(PTIWrapper.createOrUpdate(SERIAL_NUMBER, "INTERFACE",
+                                       INTF_NAME, INTF_NAME,
+                                       ConfigPriority.CONFIG_PRIO_INTF_SUB_LVL2,
+                                       "int_eth",
+                                       {"INTF_NAME": INTF_NAME, "CONF": CONF}))
+        if INTF_VRF != "":
+          # Create/update PTI for interface VRF
+          Util.exe(PTIWrapper.createOrUpdate(SERIAL_NUMBER, "INTERFACE", INTF_NAME, INTF_NAME,
+                                            ConfigPriority.CONFIG_PRIO_INTF_LOOPBACK - 1, "interface_vrf",
+                                            {"INTF_NAME": INTF_NAME, "INTF_VRF": INTF_VRF}))
+        
+        if DESC != "":
+            Util.exe(PTIWrapper.createOrUpdate(SERIAL_NUMBER, "INTERFACE", INTF_NAME, INTF_NAME,
+                                              ConfigPriority.CONFIG_PRIO_INTF_SUB_LVL1,
+                                              "interface_desc", {"INTF_NAME": INTF_NAME, "DESC": DESC}))
+                                               
+                                               
+        if ADMIN_STATE == "true":
+            utilObj.exeVal(PTIWrapper.createOrUpdate(SERIAL_NUMBER, "INTERFACE",
+                                                    INTF_NAME, INTF_NAME,
+                                                    ConfigPriority.CONFIG_PRIO_INTF_SUB_LVL1,
+                                                    "no_shut_interface",
+                                                    {"INTF_NAME": INTF_NAME}))
+        else:
+            utilObj.exeVal(PTIWrapper.createOrUpdate(SERIAL_NUMBER, "INTERFACE",
+                                                    INTF_NAME, INTF_NAME,
+                                                    ConfigPriority.CONFIG_PRIO_INTF_SUB_LVL1,
+                                                    "shut_interface",
+                                                    {"INTF_NAME": INTF_NAME}))
+
+        if ROUTE_MAP_TAG != "":
+            if LOOPBACK_IP != "":
+                Util.exe(PTIWrapper.createOrUpdate(SERIAL_NUMBER, "INTERFACE", INTF_NAME, INTF_NAME,
+                                                   ConfigPriority.CONFIG_PRIO_INTF_LOOPBACK,
+                                                   "loopback_interface_with_tag",
+                                                   {"INTF_NAME": INTF_NAME, "IP": LOOPBACK_IP, "ROUTE_MAP_TAG": ROUTE_MAP_TAG}))
+            if LOOPBACK_IPV6 != "":
+                Util.exe(PTIWrapper.createOrUpdate(SERIAL_NUMBER, "INTERFACE", INTF_NAME, INTF_NAME,
+                                                   ConfigPriority.CONFIG_PRIO_INTF_LOOPBACK,
+                                                   "v6_loopback_interface_with_tag",
+                                                   {"INTF_NAME": INTF_NAME, "IP": LOOPBACK_IPV6, "ROUTE_MAP_TAG": ROUTE_MAP_TAG}))
+        else:
+            if LOOPBACK_IP != "":
+                Util.exe(PTIWrapper.createOrUpdate(SERIAL_NUMBER, "INTERFACE", INTF_NAME, INTF_NAME,
+                                                   ConfigPriority.CONFIG_PRIO_INTF_LOOPBACK,
+                                                   "loopback_interface", {"INTF_NAME": INTF_NAME, "IP": LOOPBACK_IP}))
+            if LOOPBACK_IPV6 != "":
+                Util.exe(PTIWrapper.createOrUpdate(SERIAL_NUMBER, "INTERFACE", INTF_NAME, INTF_NAME,
+                                                       ConfigPriority.CONFIG_PRIO_INTF_LOOPBACK,
+                                                       "v6_loopback_interface", {"INTF_NAME": INTF_NAME, "IP": LOOPBACK_IPV6}))
+
+
+        respObj.setSuccessRetCode()
+        return respObj
+    except respObjError as e:
+        return e.value
+
+def delete():
+    try:
+        intf_name = INTF_NAME
+
+        ptiList = Util.exe(PTIWrapper.get(SERIAL_NUMBER, "INTERFACE", intf_name, intf_name))
+        if ptiList:
+            Util.exe(PTIWrapper.markDelete(SERIAL_NUMBER, "INTERFACE", intf_name, intf_name))
+        
+        # ptiList = Util.exe(PTIWrapper.get(SERIAL_NUMBER, "INTERFACE", intf_name, intf_name))
+        # for pti in ptiList:
+        #     Util.exe(PTIWrapper.markDeleteInstance(pti.getPolicyId()))
+        
+        # ptiList = Util.exe(PTIWrapper.get(SERIAL_NUMBER, "INTERFACE", intf_name, intf_name))
+        # ipTemplateList = ["loopback_interface_with_tag", "loopback_interface", "interface_ipv6_tag_11_1", "interface_ipv6_11_1"]
+        # for pti in ptiList:
+        #     if pti.getTemplateName() in ipTemplateList:
+        #         Util.exe(PTIWrapper.markDeleteInstance(pti.getPolicyId()))
+        #     else:
+        #         Util.exe(PTIWrapper.markDeleteInstance(pti.getPolicyId()))
+
+        # ptiList = Util.exe(PTIWrapper.get(SERIAL_NUMBER, SOURCE))
+        # if ptiList:
+        #     for pti in ptiList:
+        #         if pti.getTemplateContentType() == "PYTHON":
+        #             PTIWrapper.deleteInstance(pti.getPolicyId())
+        #         else:
+        #             PTIWrapper.markDeleteInstance(pti.getPolicyId())
+
+
+
+        respObj = WrappersResp.getRespObj()
+        respObj.setSuccessRetCode()
+        return respObj
+    except respObjError as e:
+        return e.value
+##

@@ -1,0 +1,45 @@
+##template properties
+name =cx_licensing_ssm_on_prem;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = N9K;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+@(IsInternal=true)
+string SERIAL_NUMBER;
+
+@(IsInternal=true)
+string POLICY_ID;
+
+@(IsInternal=true)
+string PRIORITY;
+
+@(DisplayName="SSM URL", Description="SSM On-Prem Transport URL", IsMandatory=true)
+string SSM_ON_PREM_URL {
+  minLength = 1;
+  maxLength = 255;
+};
+
+
+
+##
+##template content
+
+license smart transport cslu
+license smart url cslu $$SSM_ON_PREM_URL$$
+
+##
+
+
+
+
+

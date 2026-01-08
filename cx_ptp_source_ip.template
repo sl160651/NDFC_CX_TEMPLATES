@@ -1,0 +1,98 @@
+##template properties
+name =cx_ptp_source_ip;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = N9K;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = PYTHON;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+@(IsInternal=true)
+string SERIAL_NUMBER;
+
+@(IsInternal=true)
+string POLICY_ID;
+
+@(IsInternal=true)
+string PRIORITY;
+
+@(IsInternal=true)
+ipV4Address SRC_IP;
+
+@(IsMandatory=false, DisplayName="PTP Source Interface", Description="PTP Source Interface, default loopback0")
+interface INTF_NAME{
+  defaultValue=loopback0;
+};
+
+##
+##template content
+from com.cisco.dcbu.vinci.rest.services.jython import PTIWrapper
+from com.cisco.dcbu.vinci.rest.services.jython import Wrapper
+from com.cisco.dcbu.vinci.rest.services.jython import WrappersResp
+from com.cisco.dcbu.vinci.rest.services.jython import FabricWrapper
+from com.cisco.dcbu.vinci.rest.services.jython import InterfaceManagerWrapper
+
+from utility import *
+
+def add():
+    try:
+        Wrapper.print("CX PTP Source IP Loopback 0 Freeform: ADD:Switch = [%s]" % SERIAL_NUMBER)
+        try:
+          intfName = INTF_NAME.lower()
+        except:
+          intfName = 'loopback0'
+        fabricSettings = Util.exe(FabricWrapper.get(FABRIC_NAME)).getNvPairs()
+        fabricName = fabricSettings.get("FABRIC_NAME", "")
+        topologyDataObj =  TopologyData(Util.exe(TopologyWrapper.get(fabricName)))
+        switchRole = topologyDataObj.getSwitchRole(SERIAL_NUMBER)
+        #Get the interface details
+        interface_detail = Util.exe(InterfaceManagerWrapper.getInterfaceDetail(SERIAL_NUMBER, intfName))
+        #try do convert the payload from the interface to json and get the IP addresses allocated to the interface
+        try:
+          interface_detail_json = json.loads(interface_detail)
+          SRC_IP = str(interface_detail_json["ipAddress"]).split("/")[0]
+        except:
+          funcName = sys._getframe(0).f_code.co_name
+          respObj = WrappersResp.getRespObj()
+          respObj.addErrorReport(funcName, "Failed to get the interface %s configuration" % intfName)
+          respObj.setFailureRetCode()
+          return respObj
+        #check if the interface has IP address
+        if SRC_IP == None:
+          funcName = sys._getframe(0).f_code.co_name
+          respObj = WrappersResp.getRespObj()
+          respObj.addErrorReport(funcName, "Failed to get the interface %s IP Address" % intfName)
+          respObj.setFailureRetCode()
+          return respObj
+
+        delete()
+        Util.exe(PTIWrapper.createOrUpdate(SERIAL_NUMBER,
+                                         "SWITCH", "SWITCH", POLICY_ID,
+                                         int(PRIORITY)+ 10, 0 - (int(PRIORITY)+10),
+                                         "ptp_source_ip",
+                                         {"SRC_IP": SRC_IP}))
+        respObj = WrappersResp.getRespObj()
+        respObj.setSuccessRetCode()
+        return respObj
+
+    except respObjError as e:
+        return e.value
+
+def delete(Force=False):
+    try:
+        Wrapper.print("CX VPC Domain Freeform: REMOVE:Switch = [%s]" % SERIAL_NUMBER)
+        ptiList = Util.exe(PTIWrapper.get(SERIAL_NUMBER, "SWITCH", "SWITCH", POLICY_ID, "ptp_source_ip"))
+        for pti in ptiList:
+            PTIWrapper.markDeleteInstance(pti.getPolicyId())
+        respObj = WrappersResp.getRespObj()
+        respObj.setSuccessRetCode()
+        return respObj
+    except respObjError as e:
+        return e.value
+##

@@ -1,0 +1,261 @@
+##template properties
+name =cx_vlan_svi;
+description = Creates VLAN and SVI;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = PYTHON;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+@(IsInternal=true)
+string SERIAL_NUMBER;
+
+@(IsInternal=true)
+string SOURCE;
+
+@(IsInternal=true)
+string POLICY_ID;
+
+@(DisplayName="VLAN ID", Description="2-4094, value needs to be in switch allowed range")
+integer DOT1Q_ID {
+  min = 2;
+  max = 4094;
+};
+
+@(IsMandatory=false, DisplayName="VRF Name", Description="SVI VRF name, default VRF if not specified")
+string VRF_NAME {
+  minLength = 1;
+  maxLength = 32;
+};
+
+@(IsMandatory=false, DisplayName="SVI IPv4 Address/Netmask", Description="SVI IPv4 Address/Netmask")
+ipV4AddressWithSubnet IP_MASK;
+
+@(IsMandatory=false, DisplayName="SVI IPv6 Address/Netmask", Description="For IPv6 VRF Lite peering")
+ipV6AddressWithSubnet IPv6_MASK;
+
+@(IsMandatory=false, DisplayName="SVI MTU", IsMTU=true, Description="Layer-3 MTU (Min:68, Max:9216)")
+integer MTU {
+min = 68;
+max = 9216;
+defaultValue=9216;
+};
+
+@(IsMandatory=false, DisplayName="Routing TAG", Description="Routing tag associated with interface IP, Default 12345")
+long ROUTING_TAG {
+  min = 0;
+  max = 4294967295;
+  defaultValue = 12345;
+};
+
+@(IsMandatory=false, DisplayName="Disable IP redirects", Description="Disables both IPv4/IPv6 redirects on the interface, Default True")
+boolean DISABLE_IP_REDIRECTS {
+  defaultValue=true;  
+};
+
+@(IsMandatory=false, DisplayName="Interface Description", Description="Add description to the interface (Max Size 254)")
+string DESC {
+  minLength = 1;
+  maxLength = 254;
+};
+
+@(IsMandatory=false, DisplayName="Enable interface", Description="Uncheck to disable the interface")
+boolean ADMIN_STATE {
+  defaultValue=true;
+};
+
+@(IsMandatory=false, IsMultiLineString=true, DisplayName="Freeform Config", Description="Additional CLI for the interface")
+string CONF;
+
+##
+##template content
+
+
+from com.cisco.dcbu.vinci.rest.services.jython import PTIWrapper
+from com.cisco.dcbu.vinci.rest.services.jython import Wrapper
+from com.cisco.dcbu.vinci.rest.services.jython import WrappersResp
+from com.cisco.dcbu.vinci.rest.services.jython import Helper
+from com.cisco.dcbu.vinci.rest.services.jython import InventoryWrapper
+from com.cisco.dcbu.vinci.rest.services.jython import InterfaceManagerWrapper
+from utility import *
+import ast
+
+def add():
+    try:
+        Wrapper.print("======== cx_vlan_svi add [%s] ==========" % SERIAL_NUMBER)
+        
+        try:
+          SUB_VRF_NAME = "default" if VRF_NAME == "" or VRF_NAME.lower() == "default" else VRF_NAME
+        except:
+          SUB_VRF_NAME = "default"
+
+        #if called by topdown, SOURCE will be set. Then user will not be able to edit from View/Edit policies
+        jython_source  = ""
+        try:
+            jython_source = SOURCE
+        except:
+            jython_source = POLICY_ID
+            pass
+        
+        SOURCE = jython_source
+
+        try:
+          if IP_MASK != "":
+            ipAddress = IP_MASK.split("/")
+            SUB_IP = ipAddress[0]
+            SUB_PREFIX = ipAddress[1]
+          else:
+            SUB_IP = SUB_PREFIX = ""
+        except:
+          SUB_IP = SUB_PREFIX = ""
+
+        try:
+          if IPv6_MASK != "":
+            ipv6Address = IPv6_MASK.split("/")
+            SUB_IPv6 = ipv6Address[0]
+            SUB_IPv6_PREFIX = ipv6Address[1]
+          else:
+            SUB_IPv6 = SUB_IPv6_PREFIX = ""
+        except:
+          SUB_IPv6 = SUB_IPv6_PREFIX = ""
+        
+
+        if SUB_IP == "" and SUB_IPv6 == "":
+            errorMsg = ("Neither SVI IPv4 nor IPv6 Address is configured, at least one must be configured")
+            respObj.addErrorReport("CX_VLAN_SVI:INVALID_IP", errorMsg)
+            respObj.setFailureRetCode()
+            return respObj
+          
+        try:
+          SUB_MTU = MTU
+        except:
+          SUB_MTU = "9216"
+          
+        try:
+          SUB_ROUTING_TAG = str(ROUTING_TAG)
+        except:
+          SUB_ROUTING_TAG = "12345"
+          
+        try:
+          SUB_DISABLE_IP_REDIRECTS = DISABLE_IP_REDIRECTS
+        except:
+          SUB_DISABLE_IP_REDIRECTS = "true"
+        
+        try:
+          SUB_DESC = DESC
+        except:
+          SUB_DESC = ""
+        
+        try:
+          SUB_ADMIN_STATE = ADMIN_STATE
+        except:
+          SUB_ADMIN_STATE = "true"
+
+        try:
+            SUB_CONF = CONF
+        except:
+            SUB_CONF = ""
+
+        rmIds = []
+        
+        # modify to be done, calling delete now to clean up PTIs before add
+        Wrapper.print("Calling delete of PTIs for SOURCE %s" %(SOURCE))
+        delete(True)
+        
+        #SVI Interface
+        SUB_INTF_VLAN = "Vlan" + str(DOT1Q_ID)
+
+        # Create SVI for VRF Lite Extension
+        new_nvPairs = {"INTF_NAME" : SUB_INTF_VLAN,
+                       "VLAN" : DOT1Q_ID,
+                       "IP" : SUB_IP,
+                       "PREFIX" : SUB_PREFIX,
+                       "IPv6" : SUB_IPv6,
+                       "PREFIXv6" : SUB_IPv6_PREFIX,
+                       "INTF_VRF" : SUB_VRF_NAME,
+                       "MTU" : SUB_MTU,
+                       "ROUTING_TAG": SUB_ROUTING_TAG,
+                       "DISABLE_IP_REDIRECTS": SUB_DISABLE_IP_REDIRECTS,
+                       "ADMIN_STATE" : SUB_ADMIN_STATE,
+                       "DESC" : SUB_DESC,
+                       "CONF" : SUB_CONF
+                      }
+  
+        Wrapper.print("adding SVI %s, nvPairs %s" % (new_nvPairs["INTF_NAME"], new_nvPairs))
+        
+        Util.exe(PTIWrapper.createOrUpdate(SERIAL_NUMBER, "INTERFACE", new_nvPairs["INTF_NAME"], SOURCE,
+                                           ConfigPriority.CONFIG_PRIO_INTF, rmIds,
+                                           "int_vlan_internal", new_nvPairs))
+
+        respObj = WrappersResp.getRespObj()
+        respObj.setSuccessRetCode()
+        return respObj
+    except respObjError as e:
+        return e.value
+        
+def delete(Force=False):
+    try:
+        if Force:
+            try:
+                if IP_MASK != "":
+                    IP, PREFIX = IP_MASK.split("/")
+                    Wrapper.print("IPMask %s PREFIX %s" % (IP_MASK, PREFIX))
+
+                    v4SkipDel = True if PREFIX and (int(PREFIX) < 8 or int(PREFIX) > 31) else False
+                    if v4SkipDel:
+                        Wrapper.print("Ext_VRF_Lite_Jython (intf %s): upgrade case, just skip so that template validation "
+                                      "error reports warning and no change on ptis" % (src_intf))
+                        respObj = WrappersResp.getRespObj()
+                        respObj.setSuccessRetCode()
+                        return respObj
+            except:
+                pass
+
+        intfName = "Vlan" + str(DOT1Q_ID)
+
+        #if called by topdown, SOURCE will be set. Then user will not be able to edit from View/Edit policies
+        jython_source  = ""
+        try:
+            jython_source = SOURCE
+        except:
+            jython_source = POLICY_ID
+            pass
+        
+        SOURCE = jython_source
+        Wrapper.print("Source of VRF Lite Jython is %s for switch %s" %(SOURCE, SERIAL_NUMBER))
+        
+        #Get all PTIs for the SOURCE VRF Lite Extension
+        wrappersResp = PTIWrapper.get(SERIAL_NUMBER, SOURCE)
+        if wrappersResp.isRetCodeSuccess():
+            vrfLitePolicies = wrappersResp.getValue()
+            for policy in vrfLitePolicies:
+                Wrapper.print("VRF Lite policy for External Fabric DELETE: %s %s" % (policy.getPolicyId(), policy.getTemplateName()))
+                if policy.getTemplateName() == "int_vlan_internal":
+                    PTIWrapper.deleteInstance(policy.getPolicyId())
+                else:
+                    PTIWrapper.markDeleteInstance(policy.getPolicyId())
+
+        #Get the PTI for the SVI if any exists, this is to take care of the case where SVI is already created and then VRF Lite Jython is called
+        srchOpt = CtrlPolicySearch()
+        srchOpt.setSerialNumber(SERIAL_NUMBER)
+        srchOpt.setEntityName(intfName)
+        srchOpt.setTemplateContentType("PYTHON")
+        SVIPolicies = Util.exe(PTIWrapper.getPTIs(srchOpt))
+        if SVIPolicies:
+            for policy in SVIPolicies:
+                Wrapper.print("SVI policy for External Fabric DELETE: %s %s" % (policy.getPolicyId(), policy.getTemplateName()))
+                PTIWrapper.deleteInstance(policy.getPolicyId())
+
+        respObj = WrappersResp.getRespObj()
+        respObj.setSuccessRetCode()
+        return respObj
+    except respObjError as e:
+        return e.value
+
+##

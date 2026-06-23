@@ -1,0 +1,41 @@
+##template properties
+name =cx_nfm_switch_user;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = N9K;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2018 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(DisplayName="Switch Username", Description="Switch user")
+string USERNAME;
+
+@(IsPassword=true, DisplayName="Encrypted Password", Description="Encrypted password")
+string PASSWORD_ENCRYPT;
+
+@(DisplayName="User Role", Description="User Role")
+string USER_ROLE;
+
+@(DisplayName="Username Password Encryption Type", Description="Username Password Encryption Type: type 8 is pbkdf2 hashed,  type 9 is scrypt hashed")
+enum PASSWORD_ENCRYPT_TYPE {
+    validValues=8,9;
+    defaultValue=9;
+};
+
+
+##
+##template content
+
+username $$USERNAME$$ password $$PASSWORD_ENCRYPT_TYPE$$ "$$PASSWORD_ENCRYPT$$" role $$USER_ROLE$$
+
+##

@@ -1,0 +1,49 @@
+##template properties
+name =cx_bgp_vrf_neighbor_ipv4_route_map;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+@(DisplayName="BGP AS #", Description="BGP Autonomous System number")
+string BGP_AS;
+
+@(DisplayName="VRF Name", Description="Name of the VRF")
+string VRF_NAME;
+
+@(DisplayName="Neighbor", Description="Neighbor IP address")
+ipV4Address NEIGHBOR;
+
+@(DisplayName="Route-map", Description="Name of Route-map to apply")
+string ROUTE_MAP;
+
+@(DisplayName= "Direction", Description="Direction of route-map inbound or outbound")
+enum DIRECTION {
+  validValues = in,out; 
+};  
+
+  
+#    Copyright (c) 2019 by Cisco Systems, Inc.
+#    All rights reserved.
+
+##
+##template content
+
+
+router bgp $$BGP_AS$$
+  vrf $$VRF_NAME$$
+   neigbor $$NEIGHBOR$$
+      address-vamily ipv4 unicast
+        route-map $$ROUTE_MAP$$ $$DIRECTION$$
+
+##
+

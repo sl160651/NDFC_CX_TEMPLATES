@@ -1,0 +1,39 @@
+##template properties
+name =cx_aaa_tacacs_key;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2018 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(DisplayName="AAA Server IP", Description="IPv4/IPv6 Address of an AAA Server")
+ipAddressWithoutPrefix AAA_SERVER;
+
+@(DisplayName="AAA Shared Secret", Description="Shared encrypted secret used by AAA Server(s), Max size 240 for Type 6 or 63 for Type 7")
+string AAA_SECRET {
+  minLength = 1;
+  maxLength = 240;
+};
+@(DisplayName="TACACS+ Authentication Key Encryption Type", Description="TACACS+ Key Encryption Type: type-6 encrypted or type-7 encrypted")
+enum TACACS_AUTH_KEY_TYPE {
+    validValues=6,7;
+    defaultValue=7;
+};
+
+##
+##template content
+
+tacacs-server host $$AAA_SERVER$$ key $$TACACS_AUTH_KEY_TYPE$$ "$$AAA_SECRET$$"
+
+##

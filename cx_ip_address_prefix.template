@@ -1,0 +1,58 @@
+##template properties
+name =cx_ip_address_prefix;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements =implements;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+#    Copyright (c) 2019 by Cisco Systems, Inc.
+#    All rights reserved.
+
+@(DisplayName="IP Prefix List Name", Description="Name of prefix list with max. 63 characters, example prefix_list_test")
+string IP_PREFIX_NAME {
+    maxLength = 63;
+};
+
+@(DisplayName="IP Prefix Action", Description="IP Prefix permit or deny operation")
+enum IP_PREFIX_ACTION {
+    validValues=permit,deny;
+    defaultValue=permit;
+};
+
+@(DisplayName="IP Prefix Sequence Number", Description="IP Prefix match sequence number, example 10")
+integer IP_PREFIX_SEQ_NUM {
+    min = 0;
+    max = 65535;
+    defaultValue=10;
+};
+
+@(DisplayName="IP prefix network/length", Description="IP prefix network/length, example 10.0.0.0/24")
+ipV4AddressWithSubnet IP_PREFIX {
+};
+
+@(IsMandatory=False, DisplayName="Maximum prefix length", Description="Maximum prefix length, 32")
+integer MAX_PREFIX_LENGTH {
+};
+
+
+##
+##template content
+
+###prefix-list
+if ($$MAX_PREFIX_LENGTH$$ != "") {
+ip prefix-list $$IP_PREFIX_NAME$$ seq $$IP_PREFIX_SEQ_NUM$$ $$IP_PREFIX_ACTION$$ $$IP_PREFIX$$ le $$MAX_PREFIX_LENGTH$$
+}
+else {
+ip prefix-list $$IP_PREFIX_NAME$$ seq $$IP_PREFIX_SEQ_NUM$$ $$IP_PREFIX_ACTION$$ $$IP_PREFIX$$
+}
+
+##

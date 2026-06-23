@@ -1,0 +1,33 @@
+##template properties
+name =cx_sub_prefix_list_host_routes;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements =implements;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+@(IsInternal=true, IsMandatory=true)
+string PFX_LIST_NAME{
+    maxLength = 63;
+};
+
+@(IsInternal=true, IsMandatory=true)
+struct prefix_list_entry{
+	integer seq;
+	ipV4AddressWithSubnet prefix;
+} PREFIX_LIST_ENTRIES[];
+##
+##template content
+
+foreach val in $$PREFIX_LIST_ENTRIES$$ {
+ip prefix-list $$PFX_LIST_NAME$$ seq @val.seq permit @val.prefix eq 32
+}
+
+####

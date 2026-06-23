@@ -1,0 +1,54 @@
+##template properties
+name =cx_bgp_vrf_redistribute;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+
+@(DisplayName="BGP AS #", Description="BGP Autonomous System number")
+string BGP_AS;
+
+@(DisplayName="VRF Name", Description="Name of the VRF")
+string VRF_NAME;
+
+@(DisplayName="Route-type", Description="Route-type")
+enum TYPE{
+  validValues = am,direct,eigrp,hmm,isis,lsip,ospf,rip,static;
+};
+
+@(IsMandatory=false, DisplayName="Route-map name", Description="Route-map name")
+string ROUTE_MAP;
+
+  
+#    Copyright (c) 2019 by Cisco Systems, Inc.
+#    All rights reserved.
+
+##
+##template content
+
+if ($$ROUTE_MAP$$ !="") {
+
+router bgp $$BGP_AS$$
+  vrf $$VRF_NAME$$
+    address-family ipv4 unicast
+      redistribute $$TYPE$$ route-map $$ROUTE_MAP$$
+
+}
+
+else {
+  router bgp $$BGP_AS$$
+   vrf $$VRF_NAME$$   
+    address-family ipv4 unicast
+      redistribute $$TYPE$$
+}
+##
+

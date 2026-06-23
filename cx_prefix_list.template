@@ -1,8 +1,18 @@
+##template properties
+name =cx_prefix_list;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements = ;
+dependencies = ;
+published = false;
+imports = ;
+##
 ##template variables
-
-#    Copyright (c) 2022 by Cisco Systems, Inc.
-#    All rights reserved.
-
 @(IsMandatory=true, DisplayName="Name of the prefix list")
 string PFX_LIST_NAME{
     maxLength = 63;
@@ -39,10 +49,8 @@ enum OP{
 integer LEN{
     min = 0;
 };
-
 ##
 ##template content
-
 if ($$OP$$ != "") {
 ip prefix-list $$PFX_LIST_NAME$$ seq $$SEQ_NUM$$ $$ACTION$$ $$IP_PREFIX$$/$$MASK$$ $$OP$$ $$LEN$$
 }

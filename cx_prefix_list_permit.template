@@ -1,0 +1,117 @@
+##template properties
+name =cx_prefix_list_permit;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = PYTHON;
+implements =implements;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+@(IsInternal=true)
+string SERIAL_NUMBER;
+
+@(IsInternal=true)
+string POLICY_ID;
+
+@(IsInternal=true)
+string PRIORITY;
+
+@(IsMandatory=true, DisplayName="Name of the prefix list")
+string PFX_LIST_NAME{
+    maxLength = 63;
+};
+
+@(IsMandatory=true, DisplayName="Prefix list subnets to permit")
+struct prefix_list_entry{
+@(DisplayName="Subnets to permit")
+ipV4AddressWithSubnet subnet;
+} PREFIX_LIST_ENTRIES[];
+##
+##template content
+##
+
+from com.cisco.dcbu.vinci.rest.services.jython import PTIWrapper as PTI
+from com.cisco.dcbu.vinci.rest.services.jython import Wrapper
+from com.cisco.dcbu.vinci.rest.services.jython import WrappersResp
+from com.cisco.dcbu.vinci.rest.services.jython import FabricWrapper
+from com.cisco.dcbu.vinci.rest.services.jython import TopologyWrapper
+from com.cisco.dcbu.pti.resource import CtrlPolicySearch
+from topology import TopologyData
+from utility import *
+
+import sys
+
+templateName = "cx_prefix_list_permit"
+subTemplateName = "cx_sub_prefix_list_permit"
+
+def add():
+    try:    
+        Wrapper.print("CX Prefix list permit subnet allow: ADD:Switch = [%s]" % SERIAL_NUMBER)
+        fabricSettings = Util.exe(FabricWrapper.get(FABRIC_NAME)).getNvPairs()
+        bgpAsn = fabricSettings.get("BGP_AS", "")
+        fabricName = fabricSettings.get("FABRIC_NAME", "")
+        topologyDataObj =  TopologyData(Util.exe(TopologyWrapper.get(fabricName)))
+        switchRole = topologyDataObj.getSwitchRole(SERIAL_NUMBER)
+        if "border" not in switchRole:
+            funcName = sys._getframe(0).f_code.co_name
+            respObj = WrappersResp.getRespObj()
+            respObj.addErrorReport(funcName, "Tried to add permit subnet prefix list to a switch with role %s, but want border leaf" % switchRole)
+            respObj.setFailureRetCode()
+            return respObj
+        srchOpt = CtrlPolicySearch()
+        srchOpt.setSerialNumber(SERIAL_NUMBER)
+        srchOpt.setTemplateName(templateName)
+        permitSubnetPflPTIs = Util.exe(PTI.getPTIs(srchOpt))
+        for pti in permitSubnetPflPTIs:
+            if pti.isDeleted():
+                continue
+            ptiName = pti.getNvPairs()["PFX_LIST_NAME"]
+            if PFX_LIST_NAME == ptiName and pti.getPolicyId()!=POLICY_ID:
+                # Found existing policy prefix list permit subnet allow
+                funcName = sys._getframe(0).f_code.co_name
+                respObj = WrappersResp.getRespObj()
+                respObj.addErrorReport(funcName, "Tried to add second same name policy for permit subnet prefix list to switch, but one is already present")
+                respObj.setFailureRetCode()
+                return respObj
+        #Add/Edit case
+        entries = '{\"PREFIX_LIST_ENTRIES\":['
+        seq = 10
+        match = re.search(r"^.*(\[.*\])",PREFIX_LIST_ENTRIES)
+        for each in match.group(1)[1:-1].split(","):
+            #Wrapper.print("GR %s MATCH = %s" % (seq,each))
+            entries += '{\"seq\"' + ':\"' + str(seq) + '\",\"prefix\"' + ':' + each[1:-1].split(":")[1] + '},'
+            seq += 10
+        entries = entries[:-1] + "]}"
+        Wrapper.print("CX RESULT = %s" % (entries))
+        Util.exe(PTIWrapper.createOrUpdate(SERIAL_NUMBER,
+                                                     "SWITCH", "SWITCH", POLICY_ID,
+                                                     int(PRIORITY)+ 10, 0 - (int(PRIORITY)+10),
+                                                     subTemplateName,
+                                                     {"PFX_LIST_NAME": PFX_LIST_NAME,
+                                                      "PREFIX_LIST_ENTRIES": entries
+                                                      }))
+        respObj = WrappersResp.getRespObj()
+        respObj.setSuccessRetCode()
+        return respObj
+    except respObjError as e:
+        return e.value
+    
+def delete(Force=False):
+    try:
+        Wrapper.print("CX Prefix list permit subnet allow: REMOVE:Switch = [%s]" % SERIAL_NUMBER)
+        ptiList = Util.exe(PTIWrapper.get(SERIAL_NUMBER, "SWITCH", "SWITCH", POLICY_ID, subTemplateName))
+        for pti in ptiList:
+            PTIWrapper.markDeleteInstance(pti.getPolicyId())
+        respObj = WrappersResp.getRespObj()
+        respObj.setSuccessRetCode()
+        return respObj
+    except respObjError as e:
+        return e.value
+
+####

@@ -1,0 +1,62 @@
+##template properties
+name =cx_sub_prefix_list_generic;
+description = ;
+tags = ;
+userDefined = true;
+supportedPlatforms = All;
+templateType = POLICY;
+templateSubType = DEVICE;
+contentType = TEMPLATE_CLI;
+implements =implements;
+dependencies = ;
+published = false;
+imports = ;
+##
+##template variables
+@(IsInternal=true, IsMandatory=true)
+string PFX_LIST_NAME{
+    maxLength = 63;
+};
+
+@(IsInternal=true, IsMandatory=true)
+struct prefix_list_entry{
+	integer seq;
+	ipV4AddressWithSubnet prefix;
+	boolean isGE;
+	boolean isLE;
+	boolean isEQ;
+	integer geNO{
+    min = 1;
+    max = 32;
+	};
+	integer leNO{
+    min = 1;
+    max = 32;
+	};
+	integer eqNO{
+    min = 1;
+    max = 32;
+	};
+} PREFIX_LIST_ENTRIES[];
+##
+##template content
+
+foreach val in $$PREFIX_LIST_ENTRIES$$ {
+if (@val.isGE == "true" && @val.isLE != "true") {
+ip prefix-list $$PFX_LIST_NAME$$ seq @val.seq permit @val.prefix ge @val.geNO
+}
+if (@val.isGE != "true" && @val.isLE == "true") {
+ip prefix-list $$PFX_LIST_NAME$$ seq @val.seq permit @val.prefix le @val.leNO
+}
+if (@val.isGE == "true" && @val.isLE == "true") {
+ip prefix-list $$PFX_LIST_NAME$$ seq @val.seq permit @val.prefix ge @val.geNO le @val.leNO
+}
+if (@val.isEQ == "true" && @val.isLE != "true" && @val.isGE != "true") {
+ip prefix-list $$PFX_LIST_NAME$$ seq @val.seq permit @val.prefix eq @val.eqNO
+}
+if (@val.isEQ != "true" && @val.isLE != "true" && @val.isGE != "true") {
+ip prefix-list $$PFX_LIST_NAME$$ seq @val.seq permit @val.prefix
+}
+}
+
+##

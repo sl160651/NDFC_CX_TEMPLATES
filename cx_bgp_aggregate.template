@@ -36,7 +36,7 @@ if ($$SUM$$ == "true") {
 
 router bgp $$BGP_ASN$$
   address-family ipv4 unicast
-    aggergte $$IP_PRE$$ summary-only
+    aggregate $$IP_PRE$$ summary-only
 }
 
 else {
